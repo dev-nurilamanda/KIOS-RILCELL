@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Package, BarChart3, Settings, Store, Clock, UserCheck } from 'lucide-react';
+import { ShoppingCart, Package, BarChart3, Settings, Store, Clock, UserCheck, Smartphone } from 'lucide-react';
 import { StoreSettings } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
   activeTab: 'pos' | 'inventory' | 'reports' | 'settings';
@@ -8,6 +9,7 @@ interface NavbarProps {
   settings: StoreSettings;
   cartCount: number;
   lowStockCount: number;
+  onOpenInstallGuide?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   settings,
   cartCount,
   lowStockCount,
+  onOpenInstallGuide,
 }) => {
   const [time, setTime] = useState<string>('');
 
@@ -119,15 +122,31 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </nav>
 
-          {/* Right Info: Clock & Cashier Name */}
-          <div className="hidden lg:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span className="tabular-nums font-mono">{time || '00:00:00'}</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-slate-700 bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-200/80 font-medium">
-              <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="max-w-[120px] truncate">{settings.cashierName}</span>
+          {/* Right Info: Clock, Cashier Name & Install PWA */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <PWAInstallButton />
+
+            {onOpenInstallGuide && (
+              <button
+                id="btn-nav-install-guide"
+                onClick={onOpenInstallGuide}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition shrink-0"
+                title="Petunjuk & QR Code Buka di HP"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="hidden sm:inline">Panduan HP</span>
+              </button>
+            )}
+
+            <div className="hidden lg:flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                <span className="tabular-nums font-mono">{time || '00:00:00'}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-700 bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-200/80 font-medium">
+                <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="max-w-[120px] truncate">{settings.cashierName}</span>
+              </div>
             </div>
           </div>
         </div>

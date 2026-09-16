@@ -8,6 +8,8 @@ import { ReportsView } from './components/ReportsView';
 import { SettingsView } from './components/SettingsView';
 import { PaymentModal } from './components/PaymentModal';
 import { ReceiptModal } from './components/ReceiptModal';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { InstallGuideModal } from './components/InstallGuideModal';
 import { generateInvoiceNumber } from './utils/formatters';
 
 const STORAGE_KEYS = {
@@ -141,6 +143,7 @@ export default function App() {
   // Modals State
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState<boolean>(false);
+  const [isInstallGuideOpen, setIsInstallGuideOpen] = useState<boolean>(false);
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
 
   // Persist when state changes
@@ -404,6 +407,7 @@ export default function App() {
         settings={settings}
         cartCount={totalCartCount}
         lowStockCount={lowStockCount}
+        onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
       />
 
       {/* Main View Router */}
@@ -463,6 +467,7 @@ export default function App() {
             onExportAllData={handleExportAllData}
             onImportAllData={handleImportAllData}
             onResetToDemo={handleResetToDemo}
+            onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
           />
         )}
       </main>
@@ -494,6 +499,15 @@ export default function App() {
           setActiveTab('pos');
         }}
       />
+
+      {/* Install on Mobile / PWA Guide Modal */}
+      <InstallGuideModal
+        isOpen={isInstallGuideOpen}
+        onClose={() => setIsInstallGuideOpen(false)}
+      />
+
+      {/* Offline Status Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }

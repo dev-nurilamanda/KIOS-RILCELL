@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#022c22" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- Base Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  
+  <!-- Subtle inner border -->
+  <rect x="8" y="8" width="496" height="496" rx="104" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.15"/>
+  
+  <!-- Central Emblem Container -->
+  <g filter="url(#shadow)" transform="translate(64, 64)">
+    <!-- Storefront / POS Terminal Body -->
+    <!-- Register Monitor Top -->
+    <rect x="56" y="48" width="272" height="176" rx="20" fill="#ffffff"/>
+    <rect x="76" y="68" width="232" height="136" rx="12" fill="#0f172a"/>
+    
+    <!-- Screen Content: Amount & Barcode -->
+    <rect x="96" y="88" width="110" height="20" rx="4" fill="#10b981"/>
+    <text x="106" y="103" font-family="system-ui, sans-serif" font-weight="900" font-size="14" fill="#ffffff">Rp 150K</text>
+    
+    <!-- Mini chart / item bars on screen -->
+    <rect x="96" y="122" width="70" height="10" rx="2" fill="#334155"/>
+    <rect x="96" y="140" width="130" height="10" rx="2" fill="#334155"/>
+    <rect x="96" y="158" width="95" height="10" rx="2" fill="#334155"/>
+    
+    <circle cx="270" cy="150" r="22" fill="#10b981" fill-opacity="0.2"/>
+    <path d="M260 150 L267 157 L280 144" stroke="#10b981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    
+    <!-- Monitor Stand -->
+    <path d="M168 224 L216 224 L224 256 L160 256 Z" fill="#e2e8f0"/>
+    
+    <!-- Cash Drawer Base -->
+    <rect x="32" y="256" width="320" height="76" rx="16" fill="#f8fafc"/>
+    <rect x="52" y="274" width="280" height="24" rx="6" fill="#e2e8f0"/>
+    <circle cx="192" cy="286" r="4" fill="#64748b"/>
+    
+    <!-- Receipt coming out -->
+    <path d="M260 16 L312 16 L312 64 L260 64 Z" fill="#ffffff"/>
+    <path d="M260 16 L266 22 L272 16 L278 22 L284 16 L290 22 L296 16 L302 22 L308 16 L312 20 L312 64 L260 64 Z" fill="#f1f5f9"/>
+    <line x1="270" y1="30" x2="302" y2="30" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+    <line x1="270" y1="40" x2="296" y2="40" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+    <line x1="270" y1="50" x2="302" y2="50" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

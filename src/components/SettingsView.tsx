@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Receipt, Percent, Save, Download, Upload, RotateCcw, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Store, Receipt, Percent, Save, Download, Upload, RotateCcw, CheckCircle2, ShieldAlert, Smartphone } from 'lucide-react';
 import { StoreSettings } from '../types';
 
 interface SettingsViewProps {
@@ -8,6 +8,7 @@ interface SettingsViewProps {
   onExportAllData: () => void;
   onImportAllData: (jsonData: string) => boolean;
   onResetToDemo: () => void;
+  onOpenInstallGuide?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -16,6 +17,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onExportAllData,
   onImportAllData,
   onResetToDemo,
+  onOpenInstallGuide,
 }) => {
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
   const [isSaved, setIsSaved] = useState(false);
@@ -65,6 +67,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           <span>Pengaturan toko berhasil diperbarui!</span>
+        </div>
+      )}
+
+      {/* PWA Mobile Installation Card */}
+      {onOpenInstallGuide && (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-5 rounded-2xl border border-emerald-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Install Aplikasi Kasir di HP</h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Pasang aplikasi di layar utama Android atau iPhone untuk akses cepat tanpa bilah peramban.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenInstallGuide}
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 shrink-0"
+          >
+            <Smartphone className="w-4 h-4" />
+            <span>Lihat Panduan & QR Code</span>
+          </button>
         </div>
       )}
 
