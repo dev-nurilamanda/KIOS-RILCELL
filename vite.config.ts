@@ -14,9 +14,9 @@ export default defineConfig(() => {
         includeAssets: ['apple-touch-icon.png', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
           id: '/',
-          name: 'Aplikasi Kasir (POS)',
-          short_name: 'Kasir POS',
-          description: 'Aplikasi kasir berbasis web modern untuk transaksi penjualan cepat, cetak struk belanja, manajemen stok produk, dan laporan pendapatan.',
+          name: 'RILCELL Kasir & Pembukuan',
+          short_name: 'RILCELL',
+          description: 'Aplikasi pembukuan dan manajemen saldo modal konter pulsa RILCELL untuk transaksi pulsa, paket data, PLN, e-wallet, dan transfer bank.',
           theme_color: '#059669',
           background_color: '#ffffff',
           display: 'standalone',
