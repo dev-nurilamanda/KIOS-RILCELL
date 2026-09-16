@@ -14,7 +14,13 @@ import {
   Plus,
   Package,
   Layers,
-  Check
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Ticket,
+  CreditCard,
+  Headphones,
+  Box
 } from 'lucide-react';
 import { 
   ServiceCategory, 
@@ -26,6 +32,7 @@ import {
 } from '../types';
 import { formatRupiah, detectProvider } from '../utils/formatters';
 import { AccountSelect } from './CustomSelect';
+import { ProductSearchDropdown } from './ProductSearchDropdown';
 
 interface QuickEntryFormProps {
   accounts: ModalAccount[];
@@ -38,11 +45,14 @@ interface QuickEntryFormProps {
 }
 
 const CATEGORY_ITEMS: { id: ServiceCategory; label: string; icon: React.ReactNode; defaultProfitType: TransactionType }[] = [
-  { id: 'pulsa_data', label: 'Pulsa & Paket Data', icon: <Smartphone className="w-4 h-4" />, defaultProfitType: 'standard_margin' },
+  { id: 'pulsa_data', label: 'Pulsa & Data', icon: <Smartphone className="w-4 h-4" />, defaultProfitType: 'standard_margin' },
+  { id: 'voucher_fisik', label: 'Voucher Fisik', icon: <Ticket className="w-4 h-4" />, defaultProfitType: 'standard_margin' },
+  { id: 'kartu_perdana', label: 'Kartu Perdana', icon: <CreditCard className="w-4 h-4" />, defaultProfitType: 'standard_margin' },
   { id: 'pln_tagihan', label: 'Token PLN & Tagihan', icon: <Zap className="w-4 h-4" />, defaultProfitType: 'standard_margin' },
   { id: 'topup_ewallet', label: 'Top-Up E-Wallet', icon: <Wallet className="w-4 h-4" />, defaultProfitType: 'admin_fee' },
-  { id: 'transfer_tarik', label: 'Transfer & Tarik Tunai', icon: <Landmark className="w-4 h-4" />, defaultProfitType: 'admin_fee' },
+  { id: 'transfer_tarik', label: 'Transfer & Tarik', icon: <Landmark className="w-4 h-4" />, defaultProfitType: 'admin_fee' },
   { id: 'game_tv', label: 'Game & Kuota TV', icon: <Gamepad2 className="w-4 h-4" />, defaultProfitType: 'standard_margin' },
+  { id: 'aksesori_lainnya', label: 'Aksesori', icon: <Headphones className="w-4 h-4" />, defaultProfitType: 'standard_margin' },
 ];
 
 export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
@@ -68,7 +78,9 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [activeAutoFillPreset, setActiveAutoFillPreset] = useState<string | null>(null);
+  const [matchedPresetId, setMatchedPresetId] = useState<string | null>(null);
   const [presetSearch, setPresetSearch] = useState('');
+  const [isQuickPickOpen, setIsQuickPickOpen] = useState(true);
 
   const targetInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +99,8 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
     // Set default source account based on category
     if (cat === 'pulsa_data') {
       setSourceAccountId('digipos');
+    } else if (cat === 'voucher_fisik' || cat === 'kartu_perdana' || cat === 'aksesori_lainnya') {
+      setSourceAccountId('stok_fisik');
     } else if (cat === 'pln_tagihan') {
       setSourceAccountId('wekios');
     } else if (cat === 'topup_ewallet') {
@@ -118,7 +132,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
     setServiceName(preset.name);
     setCostPrice(preset.costPrice.toString());
     setSellingPrice(preset.sellingPrice.toString());
-    setSourceAccountId(preset.defaultSource);
+    setSourceAccountId(preset.productType === 'fisik' ? 'stok_fisik' : preset.defaultSource);
     setProfitType(preset.profitType);
     if (preset.defaultAdminFee !== undefined) {
       setAdminFee(preset.defaultAdminFee.toString());
@@ -126,6 +140,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
       setAdminFee('0');
     }
     setActiveAutoFillPreset(preset.name);
+    setMatchedPresetId(preset.id);
 
     // Auto-focus the target number input for blazingly fast interaction!
     setTimeout(() => {
@@ -157,10 +172,17 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
     }
   }, [profitType, numCost, numSell, numAdmin]);
 
+  // Check if current category / source is physical stock
+  const isPhysical = 
+    sourceAccountId === 'stok_fisik' || 
+    selectedCategory === 'voucher_fisik' || 
+    selectedCategory === 'kartu_perdana' || 
+    selectedCategory === 'aksesori_lainnya';
+
   // Selected Account details & available balance
   const selectedAccount = accounts.find((a) => a.id === sourceAccountId);
   const accountBalance = selectedAccount ? selectedAccount.balance : 0;
-  const isBalanceInsufficient = numCost > accountBalance;
+  const isBalanceInsufficient = !isPhysical && numCost > accountBalance;
 
   // Handle Admin Fee auto update when selling price changes in admin_fee mode
   const handleSellingPriceChange = (val: string) => {
@@ -197,7 +219,9 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
     setErrorMessage('');
     setSuccessNotice(null);
 
-    if (!targetNumber.trim()) {
+    const effectiveTargetNumber = targetNumber.trim() || (isPhysical ? 'Langsung / Etalase' : '');
+
+    if (!effectiveTargetNumber) {
       setErrorMessage('Nomor Tujuan / ID Pelanggan / No. Rekening wajib diisi!');
       targetInputRef.current?.focus();
       return;
@@ -209,7 +233,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
     }
 
     if (numCost <= 0) {
-      setErrorMessage('Harga modal (saldo yang terpotong) harus lebih dari Rp 0!');
+      setErrorMessage('Harga modal harus lebih dari Rp 0!');
       return;
     }
 
@@ -220,7 +244,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
 
     if (isBalanceInsufficient) {
       setErrorMessage(
-        `Saldo ${selectedAccount?.name || 'akun modal'} tidak mencukupi! Tersedia: ${formatRupiah(accountBalance)}, dibutuhkan: ${formatRupiah(numCost)}`
+        `Saldo ${selectedAccount?.name || 'akun modal'} tidak mencukupi untuk transaksi ini! Silakan cek & isi saldo di menu Saldo Modal.`
       );
       return;
     }
@@ -229,8 +253,8 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
       category: selectedCategory,
       serviceName: serviceName.trim(),
       provider: detectedProvider || undefined,
-      targetNumber: targetNumber.trim(),
-      sourceAccountId,
+      targetNumber: effectiveTargetNumber,
+      sourceAccountId: isPhysical ? 'stok_fisik' : sourceAccountId,
       costPrice: numCost,
       sellingPrice: numSell,
       adminFee: numAdmin,
@@ -239,10 +263,12 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
       snRefNumber: snRefNumber.trim(),
       customerName: customerName.trim() || undefined,
       notes: notes.trim() || undefined,
+      productType: isPhysical ? 'fisik' : 'digital',
+      presetId: matchedPresetId || undefined,
     });
 
     if (ok) {
-      setSuccessNotice(`Transaksi ${serviceName} ke ${targetNumber} berhasil diproses!`);
+      setSuccessNotice(`Transaksi ${serviceName} berhasil diproses!`);
       // Reset form but keep category
       setServiceName('');
       setTargetNumber('');
@@ -253,6 +279,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
       setCustomerName('');
       setNotes('');
       setActiveAutoFillPreset(null);
+      setMatchedPresetId(null);
       setTimeout(() => setSuccessNotice(null), 4000);
     }
   };
@@ -297,32 +324,59 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
 
       {/* Quick Pick Buttons / Product Chips (Master Products Auto-Fill) */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 bg-amber-100 text-amber-800 rounded-lg">
-              <Sparkles className="w-4 h-4" />
-            </span>
-            <div>
-              <h3 className="text-xs sm:text-sm font-black text-slate-900">
-                Pilihan Cepat Produk (Quick Pick Chips)
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Klik produk favorit untuk mengisi Nama, Server Saldo, Modal, dan Harga Jual secara otomatis
-              </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center justify-between sm:justify-start gap-2 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 bg-amber-100 text-amber-800 rounded-lg">
+                <Sparkles className="w-4 h-4" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                    Pilihan Cepat Produk (Quick Pick Chips)
+                  </h3>
+                  <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                    {categoryPresets.length} produk
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 hidden sm:block">
+                  Klik produk untuk mengisi Nama, Server/Stok, Modal, dan Harga Jual otomatis
+                </p>
+              </div>
             </div>
+
+            {/* Collapse Toggle Button (Mobile & Desktop) */}
+            <button
+              type="button"
+              onClick={() => setIsQuickPickOpen((prev) => !prev)}
+              className="flex sm:hidden items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+            >
+              {isQuickPickOpen ? (
+                <>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                  <span>Sembunyikan</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                  <span>Buka Chips</span>
+                </>
+              )}
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Quick search inside presets */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Cari preset..."
-                value={presetSearch}
-                onChange={(e) => setPresetSearch(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-900 focus:bg-white focus:outline-none w-32 sm:w-40"
-              />
-            </div>
+          <div className="flex items-center gap-2 justify-between sm:justify-end">
+            {isQuickPickOpen && (
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Cari preset..."
+                  value={presetSearch}
+                  onChange={(e) => setPresetSearch(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-900 focus:bg-white focus:outline-none w-32 sm:w-36"
+                />
+              </div>
+            )}
 
             {onOpenMasterProducts && (
               <button
@@ -333,25 +387,46 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                 <span>+ Atur Master</span>
               </button>
             )}
+
+            {/* Collapse Toggle Button (Desktop/Tablet) */}
+            <button
+              type="button"
+              onClick={() => setIsQuickPickOpen((prev) => !prev)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+            >
+              {isQuickPickOpen ? (
+                <>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                  <span>Sembunyikan</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                  <span>Tampilkan Tombol Cepat</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Chips Container */}
-        {categoryPresets.length === 0 ? (
-          <div className="p-4 bg-slate-50 rounded-xl text-center border border-dashed border-slate-200 text-xs text-slate-500">
-            <span>Belum ada preset untuk kategori ini. </span>
-            {onOpenMasterProducts && (
-              <button
-                type="button"
-                onClick={onOpenMasterProducts}
-                className="text-emerald-600 font-bold hover:underline ml-1"
-              >
-                Tambah di Master Produk
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2 pt-1">
+        {/* Chips Container (Collapsible) */}
+        {isQuickPickOpen && (
+          <div className="animate-in fade-in duration-150">
+            {categoryPresets.length === 0 ? (
+              <div className="p-4 bg-slate-50 rounded-xl text-center border border-dashed border-slate-200 text-xs text-slate-500">
+                <span>Belum ada preset untuk kategori ini. </span>
+                {onOpenMasterProducts && (
+                  <button
+                    type="button"
+                    onClick={onOpenMasterProducts}
+                    className="text-emerald-600 font-bold hover:underline ml-1"
+                  >
+                    Tambah di Master Produk
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2 pt-1">
             {categoryPresets.map((preset) => {
               const isSelected = activeAutoFillPreset === preset.name;
               return (
@@ -375,15 +450,28 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5 text-[10px]">
-                      <span
-                        className={`font-semibold uppercase tracking-wider px-1.5 py-0.2 rounded ${
-                          isSelected
-                            ? 'bg-emerald-700 text-emerald-100'
-                            : 'bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {preset.defaultSource}
-                      </span>
+                      {preset.productType === 'fisik' ? (
+                        <span
+                          className={`inline-flex items-center gap-0.5 font-semibold px-1.5 py-0.2 rounded ${
+                            isSelected
+                              ? 'bg-emerald-700 text-emerald-100'
+                              : 'bg-indigo-100 text-indigo-800'
+                          }`}
+                        >
+                          <Box className="w-2.5 h-2.5" />
+                          <span>Stok {preset.stockQuantity ?? 0}</span>
+                        </span>
+                      ) : (
+                        <span
+                          className={`font-semibold uppercase tracking-wider px-1.5 py-0.2 rounded ${
+                            isSelected
+                              ? 'bg-emerald-700 text-emerald-100'
+                              : 'bg-slate-200 text-slate-700'
+                          }`}
+                        >
+                          {preset.defaultSource}
+                        </span>
+                      )}
                       <span
                         className={`font-bold ${
                           isSelected ? 'text-amber-200' : 'text-emerald-700'
@@ -396,6 +484,8 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                 </button>
               );
             })}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -488,42 +578,47 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
               />
             </div>
 
-            {/* Nama Produk / Jenis Layanan */}
+            {/* Nama Produk / Jenis Layanan (Dropdown atau Mode Search dengan Referensi dari Halaman Produk) */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Jenis Layanan / Nama Produk <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="Contoh: Telkomsel Pulsa 25.000 / Top Up DANA 100K"
+              <ProductSearchDropdown
+                presets={presets}
                 value={serviceName}
-                onChange={(e) => {
-                  setServiceName(e.target.value);
-                  if (activeAutoFillPreset && e.target.value !== activeAutoFillPreset) {
+                selectedCategory={selectedCategory}
+                detectedProvider={detectedProvider}
+                onSelectPreset={(preset) => applyPreset(preset)}
+                onCustomInputChange={(val) => {
+                  setServiceName(val);
+                  if (activeAutoFillPreset && val !== activeAutoFillPreset) {
                     setActiveAutoFillPreset(null);
                   }
                 }}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+                onOpenMasterProducts={onOpenMasterProducts}
+                error={Boolean(errorMessage && !serviceName.trim())}
               />
             </div>
 
-            {/* Sumber Saldo Terpotong (CUSTOM TAILWIND UI SELECT) */}
+            {/* Sumber Saldo Terpotong (CUSTOM TAILWIND UI SELECT - Balance Hidden) */}
             <div>
               <AccountSelect
                 id="select-source-account"
-                label="Sumber Saldo Terpotong *"
+                label={isPhysical ? 'Tipe Sumber Saldo / Etalase *' : 'Sumber Saldo Terpotong *'}
                 accounts={accounts}
                 value={sourceAccountId}
                 onChange={(accKey) => setSourceAccountId(accKey)}
-                requiredAmount={numCost}
+                requiredAmount={isPhysical ? 0 : numCost}
                 error={isBalanceInsufficient}
+                includePhysicalStock={true}
+                hideBalance={true}
               />
-              {isBalanceInsufficient && (
+              {isPhysical ? (
+                <p className="text-[11px] text-indigo-700 font-semibold mt-1">
+                  📦 Produk Fisik: Tidak memotong saldo digital. Stok fisik berkurang 1 pcs & harga jual masuk ke Kas Laci.
+                </p>
+              ) : isBalanceInsufficient ? (
                 <p className="text-[11px] text-rose-600 font-bold mt-1">
                   Saldo akun modal ini tidak mencukupi untuk transaksi ini!
                 </p>
-              )}
+              ) : null}
             </div>
 
             {/* Harga Modal (Saldo Terpotong) */}

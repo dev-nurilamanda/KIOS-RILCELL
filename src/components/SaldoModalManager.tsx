@@ -42,7 +42,8 @@ export const SaldoModalManager: React.FC<SaldoModalManagerProps> = ({
   const [tempBalance, setTempBalance] = useState<string>('');
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-  const [transferFrom, setTransferFrom] = useState<AccountKey | 'kas_tunai'>('bsi_byond');
+  const [transferFrom, setTransferFrom] = useState<AccountKey | 'kas_tunai' | 'pemasok_luar'>('bsi_byond');
+  const [supplierName, setSupplierName] = useState<string>('');
   const [transferTo, setTransferTo] = useState<AccountKey>('wekios');
   const [transferAmount, setTransferAmount] = useState<string>('');
   const [transferFee, setTransferFee] = useState<string>('0');
@@ -82,31 +83,43 @@ export const SaldoModalManager: React.FC<SaldoModalManagerProps> = ({
       return;
     }
 
-    if (transferFrom === transferTo) {
-      setTransferError('Akun asal dan akun tujuan tidak boleh sama');
-      return;
-    }
-
-    // Check balance
-    let sourceBalance = 0;
-    if (transferFrom === 'kas_tunai') {
-      sourceBalance = cashOnHand;
+    if (transferFrom === 'pemasok_luar') {
+      if (!supplierName.trim()) {
+        setTransferError('Mohon masukkan Nama Pemasok / Agen / Distributor Luar');
+        return;
+      }
     } else {
-      const srcAcc = accounts.find((a) => a.id === transferFrom);
-      sourceBalance = srcAcc ? srcAcc.balance : 0;
+      if (transferFrom === transferTo) {
+        setTransferError('Akun asal dan akun tujuan tidak boleh sama');
+        return;
+      }
+
+      // Check balance for internal accounts
+      let sourceBalance = 0;
+      if (transferFrom === 'kas_tunai') {
+        sourceBalance = cashOnHand;
+      } else {
+        const srcAcc = accounts.find((a) => a.id === transferFrom);
+        sourceBalance = srcAcc ? srcAcc.balance : 0;
+      }
+
+      if (amountNum + feeNum > sourceBalance) {
+        setTransferError(`Saldo ${transferFrom === 'kas_tunai' ? 'Kas Tunai' : 'sumber'} tidak mencukupi (Tersedia: ${formatRupiah(sourceBalance)})`);
+        return;
+      }
     }
 
-    if (amountNum + feeNum > sourceBalance) {
-      setTransferError(`Saldo ${transferFrom === 'kas_tunai' ? 'Kas Tunai' : 'sumber'} tidak mencukupi (Tersedia: ${formatRupiah(sourceBalance)})`);
-      return;
-    }
+    const defaultNotes = transferFrom === 'pemasok_luar'
+      ? `Top-Up dari Supplier: ${supplierName.trim()} ke ${transferTo.toUpperCase()}`
+      : `Top-up modal dari ${transferFrom.toUpperCase()} ke ${transferTo.toUpperCase()}`;
 
     const ok = onTransferBalance({
       fromAccountId: transferFrom,
       toAccountId: transferTo,
       amount: amountNum,
       fee: feeNum,
-      notes: transferNotes.trim() || `Top-up modal dari ${transferFrom.toUpperCase()} ke ${transferTo.toUpperCase()}`,
+      supplierName: transferFrom === 'pemasok_luar' ? supplierName.trim() : undefined,
+      notes: transferNotes.trim() || defaultNotes,
     });
 
     if (ok) {
@@ -114,6 +127,7 @@ export const SaldoModalManager: React.FC<SaldoModalManagerProps> = ({
       setTransferAmount('');
       setTransferFee('0');
       setTransferNotes('');
+      setSupplierName('');
     }
   };
 
@@ -411,8 +425,16 @@ export const SaldoModalManager: React.FC<SaldoModalManagerProps> = ({
                     <td className="py-2.5 px-3 whitespace-nowrap text-slate-400">
                       {formatDate(th.timestamp)}
                     </td>
-                    <td className="py-2.5 px-3 font-semibold text-slate-800 uppercase">
-                      {th.fromAccountId === 'kas_tunai' ? 'Kas Tunai' : th.fromAccountId}
+                    <td className="py-2.5 px-3 font-semibold text-slate-800">
+                      {th.fromAccountId === 'pemasok_luar' ? (
+                        <span className="inline-flex items-center gap-1 text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded-md text-[11px]">
+                          Supplier: {th.supplierName || 'Pemasok Luar'}
+                        </span>
+                      ) : th.fromAccountId === 'kas_tunai' ? (
+                        <span className="text-emerald-700 font-bold">Kas Tunai</span>
+                      ) : (
+                        <span className="uppercase">{th.fromAccountId}</span>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 font-semibold text-emerald-700 uppercase">
                       {th.toAccountId}
@@ -476,10 +498,31 @@ export const SaldoModalManager: React.FC<SaldoModalManagerProps> = ({
                   value={transferFrom}
                   onChange={(accKey) => setTransferFrom(accKey)}
                   includeCash={true}
+                  includeSupplier={true}
                   cashOnHand={cashOnHand}
-                  requiredAmount={parseInt(transferAmount.replace(/[^0-9]/g, ''), 10) || 0}
+                  requiredAmount={transferFrom === 'pemasok_luar' ? 0 : (parseInt(transferAmount.replace(/[^0-9]/g, ''), 10) || 0)}
                 />
               </div>
+
+              {/* Input Nama Pemasok jika memilih Pemasok Luar */}
+              {transferFrom === 'pemasok_luar' && (
+                <div className="p-3 bg-amber-50/80 border border-amber-300 rounded-xl space-y-1.5 animate-in fade-in duration-150">
+                  <label className="block text-xs font-bold text-amber-950">
+                    Nama Pemasok / Agen / Sumber Modal Luar *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Sales Indosat, Distributor Pulsa, Bank Luar"
+                    value={supplierName}
+                    onChange={(e) => setSupplierName(e.target.value)}
+                    className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-slate-400"
+                  />
+                  <p className="text-[11px] text-amber-800 font-medium">
+                    💡 Saldo akun tujuan akan bertambah sebesar nominal tanpa memotong saldo akun internal mana pun.
+                  </p>
+                </div>
+              )}
 
               {/* Ke Akun (Tujuan) */}
               <div>

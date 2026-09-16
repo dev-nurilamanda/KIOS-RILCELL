@@ -23,6 +23,8 @@ import { MasterProductManager } from './components/MasterProductManager';
 import { RilcellReceiptModal } from './components/RilcellReceiptModal';
 import { InstallGuideModal } from './components/InstallGuideModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { QuickOverviewSidebar } from './components/QuickOverviewSidebar';
+import { TransferModal } from './components/TransferModal';
 import { generateInvoiceNumber } from './utils/formatters';
 import { sendTransactionToGoogleSheets } from './services/googleSheetsService';
 
@@ -128,6 +130,9 @@ export function App() {
   // Modals State
   const [activeReceiptTrx, setActiveReceiptTrx] = useState<RilcellTransaction | null>(null);
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isEditCashModalOpen, setIsEditCashModalOpen] = useState(false);
+  const [tempCashInput, setTempCashInput] = useState('');
 
   // Persistence
   useEffect(() => {
@@ -186,15 +191,19 @@ export function App() {
   const handleCreateTransaction = (
     trxData: Omit<RilcellTransaction, 'id' | 'invoiceNumber' | 'timestamp' | 'status' | 'syncedToSheets'>
   ): boolean => {
-    const sourceAcc = accounts.find((a) => a.id === trxData.sourceAccountId);
-    if (!sourceAcc) {
-      alert('Akun modal sumber tidak ditemukan!');
-      return false;
-    }
+    const isPhysical = trxData.productType === 'fisik' || trxData.sourceAccountId === 'stok_fisik';
 
-    if (sourceAcc.balance < trxData.costPrice) {
-      alert(`Saldo ${sourceAcc.name} tidak mencukupi untuk transaksi ini.`);
-      return false;
+    if (!isPhysical) {
+      const sourceAcc = accounts.find((a) => a.id === trxData.sourceAccountId);
+      if (!sourceAcc) {
+        alert('Akun modal sumber tidak ditemukan!');
+        return false;
+      }
+
+      if (sourceAcc.balance < trxData.costPrice) {
+        alert(`Saldo ${sourceAcc.name} tidak mencukupi untuk transaksi ini.`);
+        return false;
+      }
     }
 
     const newTrxId = `trx-${Date.now()}`;
@@ -208,21 +217,43 @@ export function App() {
       syncedToSheets: false,
     };
 
-    // Deduct cost price from source modal account
-    const updatedAccounts = accounts.map((acc) => {
-      if (acc.id === trxData.sourceAccountId) {
-        return {
-          ...acc,
-          balance: acc.balance - trxData.costPrice,
-          updatedAt: Date.now(),
-        };
+    let updatedAccounts = accounts;
+    if (!isPhysical) {
+      // Deduct cost price from source modal account
+      updatedAccounts = accounts.map((acc) => {
+        if (acc.id === trxData.sourceAccountId) {
+          return {
+            ...acc,
+            balance: acc.balance - trxData.costPrice,
+            updatedAt: Date.now(),
+          };
+        }
+        return acc;
+      });
+      setAccounts(updatedAccounts);
+    } else {
+      // Physical product: deduct 1 pcs from preset stock
+      if (trxData.presetId) {
+        setPresets((prev) =>
+          prev.map((p) =>
+            p.id === trxData.presetId
+              ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - 1) }
+              : p
+          )
+        );
+      } else {
+        setPresets((prev) =>
+          prev.map((p) =>
+            p.name.toLowerCase() === trxData.serviceName.toLowerCase() && p.productType === 'fisik'
+              ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - 1) }
+              : p
+          )
+        );
       }
-      return acc;
-    });
+    }
 
     // Add selling price to cash on hand
     setCashOnHand((prev) => prev + trxData.sellingPrice);
-    setAccounts(updatedAccounts);
     setTransactions((prev) => [newTransaction, ...prev]);
 
     // Open receipt modal right away for cashier convenience
@@ -238,42 +269,69 @@ export function App() {
     return true;
   };
 
-  // 2. Toggle Status (Sukses / Gagal with automatic refund logic)
+  // 2. Toggle Status (Sukses / Gagal with automatic refund & stock return logic)
   const handleToggleStatus = (id: string) => {
     const target = transactions.find((t) => t.id === id);
     if (!target) return;
 
     const newStatus = target.status === 'sukses' ? 'gagal' : 'sukses';
+    const isPhysical = target.productType === 'fisik' || target.sourceAccountId === 'stok_fisik';
 
     if (newStatus === 'gagal') {
-      // Revert: refund costPrice back to modal account, deduct sellingPrice from cash
-      setAccounts((prev) =>
-        prev.map((acc) => {
-          if (acc.id === target.sourceAccountId) {
-            return {
-              ...acc,
-              balance: acc.balance + target.costPrice,
-              updatedAt: Date.now(),
-            };
-          }
-          return acc;
-        })
-      );
+      if (!isPhysical) {
+        // Revert: refund costPrice back to modal account
+        setAccounts((prev) =>
+          prev.map((acc) => {
+            if (acc.id === target.sourceAccountId) {
+              return {
+                ...acc,
+                balance: acc.balance + target.costPrice,
+                updatedAt: Date.now(),
+              };
+            }
+            return acc;
+          })
+        );
+      } else {
+        // Revert physical stock: return 1 pcs to preset stock
+        if (target.presetId) {
+          setPresets((prev) =>
+            prev.map((p) =>
+              p.id === target.presetId
+                ? { ...p, stockQuantity: (p.stockQuantity ?? 0) + 1 }
+                : p
+            )
+          );
+        }
+      }
       setCashOnHand((prev) => Math.max(0, prev - target.sellingPrice));
     } else {
-      // Re-apply: deduct costPrice from modal account, add sellingPrice to cash
-      setAccounts((prev) =>
-        prev.map((acc) => {
-          if (acc.id === target.sourceAccountId) {
-            return {
-              ...acc,
-              balance: Math.max(0, acc.balance - target.costPrice),
-              updatedAt: Date.now(),
-            };
-          }
-          return acc;
-        })
-      );
+      if (!isPhysical) {
+        // Re-apply: deduct costPrice from modal account
+        setAccounts((prev) =>
+          prev.map((acc) => {
+            if (acc.id === target.sourceAccountId) {
+              return {
+                ...acc,
+                balance: Math.max(0, acc.balance - target.costPrice),
+                updatedAt: Date.now(),
+              };
+            }
+            return acc;
+          })
+        );
+      } else {
+        // Deduct 1 pcs stock
+        if (target.presetId) {
+          setPresets((prev) =>
+            prev.map((p) =>
+              p.id === target.presetId
+                ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - 1) }
+                : p
+            )
+          );
+        }
+      }
       setCashOnHand((prev) => prev + target.sellingPrice);
     }
 
@@ -282,14 +340,15 @@ export function App() {
     );
   };
 
-  // 3. Transfer Balance / Top-Up Modal Handler
+  // 3. Transfer Balance / Top-Up Modal Handler (Supports Supplier without deducting internal accounts)
   const handleTransferBalance = (
     transfer: Omit<BalanceTransfer, 'id' | 'timestamp' | 'invoiceNumber'>
   ): boolean => {
     const totalDeducted = transfer.amount + transfer.fee;
 
-    // Deduct from source
-    if (transfer.fromAccountId === 'kas_tunai') {
+    if (transfer.fromAccountId === 'pemasok_luar') {
+      // Top-up from external supplier: no deduction from internal accounts
+    } else if (transfer.fromAccountId === 'kas_tunai') {
       if (cashOnHand < totalDeducted) {
         alert('Kas tunai tidak mencukupi');
         return false;
@@ -413,15 +472,32 @@ export function App() {
       {/* Main Content Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-6">
         {activeTab === 'entry' && (
-          <QuickEntryForm
-            accounts={accounts}
-            presets={presets}
-            onSubmitTransaction={handleCreateTransaction}
-            onSelectTransactionReceipt={(trx) => setActiveReceiptTrx(trx)}
-            onOpenMasterProducts={() => setActiveTab('products')}
-            selectedPresetToFill={selectedPresetToFill}
-            onClearSelectedPreset={() => setSelectedPresetToFill(null)}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Kolom Kiri: Formulir Transaksi Baru (Quick Entry Form) */}
+            <div className="lg:col-span-7 xl:col-span-8">
+              <QuickEntryForm
+                accounts={accounts}
+                presets={presets}
+                onSubmitTransaction={handleCreateTransaction}
+                onSelectTransactionReceipt={(trx) => setActiveReceiptTrx(trx)}
+                onOpenMasterProducts={() => setActiveTab('products')}
+                selectedPresetToFill={selectedPresetToFill}
+                onClearSelectedPreset={() => setSelectedPresetToFill(null)}
+              />
+            </div>
+
+            {/* Kolom Kanan: Aktivitas Kasir, Transaksi Terakhir & Cetak Struk (Informasi Saldo Terpusat di Menu Saldo) */}
+            <div className="lg:col-span-5 xl:col-span-4">
+              <QuickOverviewSidebar
+                accounts={accounts}
+                recentTransactions={transactions}
+                onOpenTransferModal={() => setIsTransferModalOpen(true)}
+                onSelectTransactionReceipt={(trx) => setActiveReceiptTrx(trx)}
+                onViewAllSaldo={() => setActiveTab('saldo')}
+                onViewAllHistory={() => setActiveTab('history')}
+              />
+            </div>
+          </div>
         )}
 
         {activeTab === 'saldo' && (
@@ -484,6 +560,58 @@ export function App() {
           />
         )}
       </main>
+
+      {/* Reusable Transfer Balance / Top-Up Modal */}
+      <TransferModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        accounts={accounts}
+        cashOnHand={cashOnHand}
+        onTransferBalance={handleTransferBalance}
+      />
+
+      {/* Quick Edit Cash on Hand Modal */}
+      {isEditCashModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
+            <h3 className="text-base font-bold text-slate-900 mb-1">Sesuaikan Kas Fisik di Laci</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Perbarui nominal fisik uang kertas & koin yang ada di laci konter saat ini.
+            </p>
+            <div className="relative mb-4">
+              <span className="absolute left-3 top-2.5 text-sm font-bold text-slate-400">Rp</span>
+              <input
+                type="number"
+                step="1000"
+                autoFocus
+                value={tempCashInput}
+                onChange={(e) => setTempCashInput(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3 py-2.5 text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditCashModalOpen(false)}
+                className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const val = parseInt(tempCashInput.replace(/[^0-9]/g, ''), 10) || 0;
+                  handleUpdateCashOnHand(val);
+                  setIsEditCashModalOpen(false);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+              >
+                Simpan Kas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Thermal & WhatsApp Receipt Modal */}
       <RilcellReceiptModal

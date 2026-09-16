@@ -7,7 +7,8 @@ export type AccountKey =
   | 'ovo'
   | 'gopay_merchant'
   | 'bsi_byond'
-  | 'kas_tunai';
+  | 'kas_tunai'
+  | 'stok_fisik';
 
 export interface ModalAccount {
   id: AccountKey;
@@ -27,7 +28,10 @@ export type ServiceCategory =
   | 'pln_tagihan'
   | 'topup_ewallet'
   | 'transfer_tarik'
-  | 'game_tv';
+  | 'game_tv'
+  | 'voucher_fisik'
+  | 'kartu_perdana'
+  | 'aksesori_lainnya';
 
 export type TransactionType = 'standard_margin' | 'admin_fee';
 
@@ -52,17 +56,20 @@ export interface RilcellTransaction {
   status: TransactionStatus;
   customerName?: string;
   syncedToSheets?: boolean;
+  productType?: 'digital' | 'fisik';
+  presetId?: string;
 }
 
 export interface BalanceTransfer {
   id: string;
   timestamp: number;
-  fromAccountId: AccountKey | 'topup_eksternal';
+  fromAccountId: AccountKey | 'topup_eksternal' | 'pemasok_luar';
   toAccountId: AccountKey;
   amount: number;
   fee: number;
   notes?: string;
   invoiceNumber: string;
+  supplierName?: string;
 }
 
 export interface RilcellSettings {
@@ -88,4 +95,6 @@ export interface QuickPresetProduct {
   defaultAdminFee?: number;
   profitType: TransactionType;
   defaultSource: AccountKey;
+  productType?: 'digital' | 'fisik';
+  stockQuantity?: number; // Jumlah stok fisik (Pcs)
 }

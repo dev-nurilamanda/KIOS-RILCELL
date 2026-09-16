@@ -15,7 +15,11 @@ import {
   Landmark, 
   Gamepad2,
   TrendingUp,
-  Tag
+  Tag,
+  Box,
+  Ticket,
+  CreditCard,
+  Headphones
 } from 'lucide-react';
 import { 
   QuickPresetProduct, 
@@ -53,6 +57,8 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
 
   // Form State for Add / Edit
   const [name, setName] = useState('');
+  const [productType, setProductType] = useState<'digital' | 'fisik'>('digital');
+  const [stockQuantity, setStockQuantity] = useState<string>('10');
   const [category, setCategory] = useState<ServiceCategory>('pulsa_data');
   const [provider, setProvider] = useState('');
   const [defaultSource, setDefaultSource] = useState<AccountKey>('digipos');
@@ -81,6 +87,8 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
   const openAddModal = () => {
     setEditingPreset(null);
     setName('');
+    setProductType('digital');
+    setStockQuantity('10');
     setCategory('pulsa_data');
     setProvider('');
     setDefaultSource('digipos');
@@ -94,6 +102,8 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
   const openEditModal = (preset: QuickPresetProduct) => {
     setEditingPreset(preset);
     setName(preset.name);
+    setProductType(preset.productType || 'digital');
+    setStockQuantity((preset.stockQuantity ?? 10).toString());
     setCategory(preset.category);
     setProvider(preset.provider || '');
     setDefaultSource(preset.defaultSource);
@@ -110,6 +120,7 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
     const numCost = parseInt(costPrice.replace(/[^0-9]/g, ''), 10) || 0;
     const numSell = parseInt(sellingPrice.replace(/[^0-9]/g, ''), 10) || 0;
     const numFee = parseInt(defaultAdminFee.replace(/[^0-9]/g, ''), 10) || 0;
+    const numStock = parseInt(stockQuantity.replace(/[^0-9]/g, ''), 10) || 0;
 
     if (!name.trim()) {
       alert('Nama produk wajib diisi!');
@@ -120,12 +131,16 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
       return;
     }
 
+    const payloadSource = productType === 'fisik' ? 'stok_fisik' : defaultSource;
+
     if (editingPreset) {
       onUpdatePreset(editingPreset.id, {
         name: name.trim(),
+        productType,
+        stockQuantity: productType === 'fisik' ? numStock : undefined,
         category,
         provider: provider.trim() || undefined,
-        defaultSource,
+        defaultSource: payloadSource,
         costPrice: numCost,
         sellingPrice: numSell,
         defaultAdminFee: numFee,
@@ -134,9 +149,11 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
     } else {
       onAddPreset({
         name: name.trim(),
+        productType,
+        stockQuantity: productType === 'fisik' ? numStock : undefined,
         category,
         provider: provider.trim() || undefined,
-        defaultSource,
+        defaultSource: payloadSource,
         costPrice: numCost,
         sellingPrice: numSell,
         defaultAdminFee: numFee,
@@ -187,6 +204,27 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
             <Gamepad2 className="w-3 h-3" />
             <span>Game & TV</span>
+          </span>
+        );
+      case 'voucher_fisik':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+            <Ticket className="w-3 h-3" />
+            <span>Voucher Fisik</span>
+          </span>
+        );
+      case 'kartu_perdana':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <CreditCard className="w-3 h-3" />
+            <span>Kartu Perdana</span>
+          </span>
+        );
+      case 'aksesori_lainnya':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+            <Headphones className="w-3 h-3" />
+            <span>Aksesori & Lainnya</span>
           </span>
         );
       default:
@@ -253,14 +291,17 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
         </div>
 
         {/* Category Filter Pills */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto no-scrollbar shrink-0">
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto no-scrollbar shrink-0 max-w-full">
           {[
             { id: 'all', label: 'Semua' },
-            { id: 'pulsa_data', label: 'Pulsa' },
+            { id: 'pulsa_data', label: 'Pulsa & Data' },
+            { id: 'voucher_fisik', label: 'Voucher Fisik' },
+            { id: 'kartu_perdana', label: 'Perdana' },
             { id: 'pln_tagihan', label: 'PLN' },
             { id: 'topup_ewallet', label: 'E-Wallet' },
             { id: 'transfer_tarik', label: 'Transfer' },
             { id: 'game_tv', label: 'Game' },
+            { id: 'aksesori_lainnya', label: 'Aksesori' },
           ].map((cat) => (
             <button
               key={cat.id}
@@ -330,10 +371,21 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
 
                   <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs space-y-1.5 mt-2">
                     <div className="flex items-center justify-between text-slate-600">
-                      <span>Server Saldo:</span>
-                      <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 text-[11px]">
-                        {getAccountName(preset.defaultSource)}
-                      </span>
+                      <span>{preset.productType === 'fisik' ? 'Tipe & Stok:' : 'Server Saldo:'}</span>
+                      {preset.productType === 'fisik' ? (
+                        <span className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded border text-[11px] ${
+                          (preset.stockQuantity ?? 0) <= 3
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        }`}>
+                          <Box className="w-3 h-3" />
+                          <span>Stok: {preset.stockQuantity ?? 0} Pcs</span>
+                        </span>
+                      ) : (
+                        <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 text-[11px]">
+                          {getAccountName(preset.defaultSource)}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between text-slate-600">
@@ -399,6 +451,49 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
 
             {/* Modal Form */}
             <form onSubmit={handleSavePreset} className="p-5 sm:p-6 overflow-y-auto space-y-4">
+              {/* Pilihan Tipe Produk */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Tipe Produk <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setProductType('digital')}
+                    className={`p-2.5 rounded-xl text-left border transition flex items-start gap-2.5 ${
+                      productType === 'digital'
+                        ? 'bg-emerald-50/90 border-emerald-500 text-emerald-950 ring-1 ring-emerald-500'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Smartphone className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-xs font-bold">Produk Digital / Saldo</div>
+                      <div className="text-[10px] text-slate-500 leading-tight mt-0.5">Memotong Saldo Server Modal</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProductType('fisik');
+                      if (category === 'pulsa_data') setCategory('voucher_fisik');
+                    }}
+                    className={`p-2.5 rounded-xl text-left border transition flex items-start gap-2.5 ${
+                      productType === 'fisik'
+                        ? 'bg-indigo-50/90 border-indigo-500 text-indigo-950 ring-1 ring-indigo-500'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Box className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-xs font-bold">Produk Fisik / Etalase</div>
+                      <div className="text-[10px] text-slate-500 leading-tight mt-0.5">Memotong Stok Fisik Pcs</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               {/* Nama Produk */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -407,7 +502,11 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Misal: Telkomsel Data 15GB 30 Hari / Token PLN 50K"
+                  placeholder={
+                    productType === 'fisik'
+                      ? 'Misal: Voucher Telkomsel 2.5GB 5 Hari / Kartu Perdana AXIS 10GB'
+                      : 'Misal: Telkomsel Data 15GB 30 Hari / Token PLN 50K'
+                  }
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
@@ -430,22 +529,48 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="Misal: Telkomsel, PLN, DANA, Moonton, BSI"
+                  placeholder="Misal: Telkomsel, XL, Indosat, PLN, DANA"
                   value={provider}
                   onChange={(e) => setProvider(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
                 />
               </div>
 
-              {/* Sumber Saldo Modal Default (Custom Account Select) */}
-              <div>
-                <AccountSelect
-                  label="Sumber Saldo Modal Default"
-                  accounts={accounts}
-                  value={defaultSource}
-                  onChange={(accKey) => setDefaultSource(accKey)}
-                />
-              </div>
+              {/* Conditionally: Sumber Saldo Modal OR Jumlah Stok Fisik */}
+              {productType === 'digital' ? (
+                <div>
+                  <AccountSelect
+                    label="Sumber Saldo Modal Default"
+                    accounts={accounts}
+                    value={defaultSource}
+                    onChange={(accKey) => setDefaultSource(accKey)}
+                  />
+                </div>
+              ) : (
+                <div className="p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl space-y-1.5 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-indigo-950">
+                      Jumlah Stok Fisik (Pcs) <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[10px] text-indigo-700 font-semibold">Tersedia di Etalase</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      placeholder="Contoh: 20"
+                      value={stockQuantity}
+                      onChange={(e) => setStockQuantity(e.target.value)}
+                      className="w-full bg-white border border-indigo-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    />
+                    <span className="absolute right-3.5 top-2 text-xs font-bold text-slate-400">Pcs</span>
+                  </div>
+                  <p className="text-[11px] text-indigo-800">
+                    💡 Penjualan produk fisik akan memotong stok fisik 1 pcs tanpa memotong saldo server digital. Uang penjualan tetap masuk ke Kas Tunai Laci.
+                  </p>
+                </div>
+              )}
 
               {/* Tipe Profit */}
               <div>
