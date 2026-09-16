@@ -4,12 +4,14 @@ import {
   RilcellTransaction, 
   BalanceTransfer, 
   RilcellSettings, 
-  AccountKey 
+  AccountKey,
+  QuickPresetProduct 
 } from './types';
 import { 
   INITIAL_MODAL_ACCOUNTS, 
   INITIAL_SETTINGS, 
-  INITIAL_TRANSACTIONS 
+  INITIAL_TRANSACTIONS,
+  QUICK_PRESETS 
 } from './data/initialData';
 import { Navbar, RilcellNavTab } from './components/Navbar';
 import { QuickEntryForm } from './components/QuickEntryForm';
@@ -17,6 +19,7 @@ import { SaldoModalManager } from './components/SaldoModalManager';
 import { TransactionHistoryView } from './components/TransactionHistoryView';
 import { DashboardAnalyticsView } from './components/DashboardAnalyticsView';
 import { SettingsView } from './components/SettingsView';
+import { MasterProductManager } from './components/MasterProductManager';
 import { RilcellReceiptModal } from './components/RilcellReceiptModal';
 import { InstallGuideModal } from './components/InstallGuideModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -29,6 +32,7 @@ const STORAGE_KEYS = {
   TRANSFERS: 'rilcell_transfers_v2',
   SETTINGS: 'rilcell_settings_v2',
   CASH: 'rilcell_cash_v2',
+  PRESETS: 'rilcell_presets_v2',
 };
 
 export function App() {
@@ -104,6 +108,23 @@ export function App() {
     return INITIAL_SETTINGS.cashOnHand;
   });
 
+  // Master Presets State (Product Presets)
+  const [presets, setPresets] = useState<QuickPresetProduct[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PRESETS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading presets:', e);
+    }
+    return QUICK_PRESETS;
+  });
+
+  // Selected Preset to auto-fill into transaction form
+  const [selectedPresetToFill, setSelectedPresetToFill] = useState<QuickPresetProduct | null>(null);
+
   // Modals State
   const [activeReceiptTrx, setActiveReceiptTrx] = useState<RilcellTransaction | null>(null);
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
@@ -128,6 +149,33 @@ export function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CASH, cashOnHand.toString());
   }, [cashOnHand]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(presets));
+  }, [presets]);
+
+  // Master Preset CRUD Handlers
+  const handleAddPreset = (newPresetData: Omit<QuickPresetProduct, 'id'>) => {
+    const newPreset: QuickPresetProduct = {
+      ...newPresetData,
+      id: `qp-${Date.now()}`,
+    };
+    setPresets((prev) => [newPreset, ...prev]);
+  };
+
+  const handleUpdatePreset = (id: string, updatedFields: Partial<QuickPresetProduct>) => {
+    setPresets((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updatedFields } : item))
+    );
+  };
+
+  const handleDeletePreset = (id: string) => {
+    setPresets((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleResetPresets = () => {
+    setPresets(QUICK_PRESETS);
+  };
 
   // Low Balance Accounts Alert Count
   const lowBalanceCount = accounts.filter(
@@ -312,6 +360,7 @@ export function App() {
       transferHistory,
       settings,
       cashOnHand,
+      presets,
     };
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
     const dlAnchor = document.createElement('a');
@@ -329,6 +378,7 @@ export function App() {
         if (Array.isArray(data.transferHistory)) setTransferHistory(data.transferHistory);
         if (data.settings) setSettings(data.settings);
         if (typeof data.cashOnHand === 'number') setCashOnHand(data.cashOnHand);
+        if (Array.isArray(data.presets)) setPresets(data.presets);
         return true;
       }
       return false;
@@ -344,6 +394,7 @@ export function App() {
     setTransferHistory([]);
     setSettings(INITIAL_SETTINGS);
     setCashOnHand(INITIAL_SETTINGS.cashOnHand);
+    setPresets(QUICK_PRESETS);
   };
 
   return (
@@ -355,6 +406,7 @@ export function App() {
         settings={settings}
         accounts={accounts}
         lowBalanceCount={lowBalanceCount}
+        presetsCount={presets.length}
         onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
       />
 
@@ -363,8 +415,12 @@ export function App() {
         {activeTab === 'entry' && (
           <QuickEntryForm
             accounts={accounts}
+            presets={presets}
             onSubmitTransaction={handleCreateTransaction}
             onSelectTransactionReceipt={(trx) => setActiveReceiptTrx(trx)}
+            onOpenMasterProducts={() => setActiveTab('products')}
+            selectedPresetToFill={selectedPresetToFill}
+            onClearSelectedPreset={() => setSelectedPresetToFill(null)}
           />
         )}
 
@@ -377,6 +433,21 @@ export function App() {
             onTransferBalance={handleTransferBalance}
             onUpdateCashOnHand={handleUpdateCashOnHand}
             transferHistory={transferHistory}
+          />
+        )}
+
+        {activeTab === 'products' && (
+          <MasterProductManager
+            presets={presets}
+            accounts={accounts}
+            onAddPreset={handleAddPreset}
+            onUpdatePreset={handleUpdatePreset}
+            onDeletePreset={handleDeletePreset}
+            onResetPresets={handleResetPresets}
+            onSelectPresetToTransact={(preset) => {
+              setSelectedPresetToFill(preset);
+              setActiveTab('entry');
+            }}
           />
         )}
 
@@ -403,11 +474,13 @@ export function App() {
             settings={settings}
             accounts={accounts}
             transactions={transactions}
+            presetsCount={presets.length}
             onSaveSettings={handleSaveSettings}
             onExportAllData={handleExportAllData}
             onImportAllData={handleImportAllData}
             onResetToDemo={handleResetToDemo}
             onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
+            onOpenMasterProducts={() => setActiveTab('products')}
           />
         )}
       </main>

@@ -13,7 +13,8 @@ import {
   Copy, 
   AlertTriangle,
   RefreshCw,
-  Code
+  Code,
+  Package
 } from 'lucide-react';
 import { RilcellSettings, ModalAccount, RilcellTransaction } from '../types';
 import { GOOGLE_APPS_SCRIPT_TEMPLATE, syncAccountsToGoogleSheets, fetchFromGoogleSheets } from '../services/googleSheetsService';
@@ -23,11 +24,13 @@ interface SettingsViewProps {
   settings: RilcellSettings;
   accounts: ModalAccount[];
   transactions: RilcellTransaction[];
+  presetsCount?: number;
   onSaveSettings: (newSettings: RilcellSettings) => void;
   onExportAllData: () => void;
   onImportAllData: (jsonData: string) => boolean;
   onResetToDemo: () => void;
   onOpenInstallGuide?: () => void;
+  onOpenMasterProducts?: () => void;
   onSyncWithGoogleSheets?: () => Promise<void>;
 }
 
@@ -35,11 +38,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   accounts,
   transactions,
+  presetsCount = 0,
   onSaveSettings,
   onExportAllData,
   onImportAllData,
   onResetToDemo,
   onOpenInstallGuide,
+  onOpenMasterProducts,
   onSyncWithGoogleSheets,
 }) => {
   const [formData, setFormData] = useState<RilcellSettings>(settings);
@@ -303,6 +308,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Master Produk & Preset Shortcut Card */}
+      {onOpenMasterProducts && (
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200">
+              <Package className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900">Master Produk & Preset Cepat</h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                  {presetsCount} Produk Tersimpan
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Atur daftar produk langganan, harga modal, harga jual, dan server saldo default untuk input transaksi otomatis.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenMasterProducts}
+            className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 shrink-0"
+          >
+            <Package className="w-4 h-4 text-emerald-400" />
+            <span>Buka Master Produk</span>
+          </button>
+        </div>
+      )}
 
       {/* PWA Mobile Installation Card */}
       {onOpenInstallGuide && (

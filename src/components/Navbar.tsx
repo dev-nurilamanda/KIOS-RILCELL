@@ -8,12 +8,13 @@ import {
   Smartphone, 
   AlertTriangle, 
   Clock, 
-  UserCheck 
+  UserCheck,
+  Package
 } from 'lucide-react';
 import { RilcellSettings, ModalAccount } from '../types';
 import { PWAInstallButton } from './PWAInstallButton';
 
-export type RilcellNavTab = 'entry' | 'saldo' | 'history' | 'analytics' | 'settings';
+export type RilcellNavTab = 'entry' | 'saldo' | 'products' | 'history' | 'analytics' | 'settings';
 
 interface NavbarProps {
   activeTab: RilcellNavTab;
@@ -21,6 +22,7 @@ interface NavbarProps {
   settings: RilcellSettings;
   accounts: ModalAccount[];
   lowBalanceCount: number;
+  presetsCount?: number;
   onOpenInstallGuide?: () => void;
 }
 
@@ -60,6 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       badge: lowBalanceCount > 0 ? `${lowBalanceCount}!` : undefined,
       badgeAlert: lowBalanceCount > 0
     },
+    { id: 'products' as const, label: 'Master Produk', shortLabel: 'Produk', icon: Package },
     { id: 'history' as const, label: 'Riwayat & Kas', shortLabel: 'Riwayat', icon: History },
     { id: 'analytics' as const, label: 'Statistik & Grafik', shortLabel: 'Statistik', icon: BarChart3 },
     { id: 'settings' as const, label: 'Pengaturan', shortLabel: 'Pengaturan', icon: Settings },

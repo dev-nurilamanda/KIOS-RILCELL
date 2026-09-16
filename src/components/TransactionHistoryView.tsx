@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { RilcellTransaction, ServiceCategory, AccountKey, ModalAccount, RilcellSettings } from '../types';
 import { formatRupiah, formatDate, generateWhatsAppReceipt } from '../utils/formatters';
+import { CustomSelect, SelectOption } from './CustomSelect';
 
 interface TransactionHistoryViewProps {
   transactions: RilcellTransaction[];
@@ -209,57 +210,53 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
           </div>
         </div>
 
-        {/* Category & Account Selectors */}
+        {/* Category & Account Selectors with Custom UI Dropdowns */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-100">
           <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
-              Kategori Layanan
-            </label>
-            <select
+            <CustomSelect
+              label="Kategori Layanan"
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none"
-            >
-              <option value="all">Semua Kategori</option>
-              <option value="pulsa_data">Pulsa & Paket Data</option>
-              <option value="pln_tagihan">Token PLN & Tagihan</option>
-              <option value="topup_ewallet">Top-Up E-Wallet</option>
-              <option value="transfer_tarik">Transfer & Tarik Tunai</option>
-              <option value="game_tv">Game & Kuota TV</option>
-            </select>
+              onChange={(val) => setSelectedCategory(val)}
+              options={[
+                { value: 'all', label: 'Semua Kategori' },
+                { value: 'pulsa_data', label: 'Pulsa & Paket Data', icon: <Smartphone className="w-3.5 h-3.5 text-blue-600" /> },
+                { value: 'pln_tagihan', label: 'Token PLN & Tagihan', icon: <Zap className="w-3.5 h-3.5 text-amber-600" /> },
+                { value: 'topup_ewallet', label: 'Top-Up E-Wallet', icon: <Wallet className="w-3.5 h-3.5 text-emerald-600" /> },
+                { value: 'transfer_tarik', label: 'Transfer & Tarik Tunai', icon: <Landmark className="w-3.5 h-3.5 text-purple-600" /> },
+                { value: 'game_tv', label: 'Game & Kuota TV', icon: <Gamepad2 className="w-3.5 h-3.5 text-rose-600" /> },
+              ]}
+            />
           </div>
 
           <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
-              Sumber Saldo Modal
-            </label>
-            <select
+            <CustomSelect
+              label="Sumber Saldo Modal"
               value={selectedAccount}
-              onChange={(e) => setSelectedAccount(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none"
-            >
-              <option value="all">Semua Sumber Saldo</option>
-              {accounts.map((acc) => (
-                <option key={acc.id} value={acc.id}>
-                  {acc.name}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedAccount(val)}
+              options={[
+                { value: 'all', label: 'Semua Sumber Saldo' },
+                ...accounts.map((acc) => ({
+                  value: acc.id,
+                  label: acc.name,
+                  sublabel: `Saldo: ${formatRupiah(acc.balance)}`,
+                  badge: acc.balance < 100000 ? 'Menipis' : undefined,
+                  badgeType: (acc.balance < 100000 ? 'warning' : 'neutral') as any,
+                })),
+              ]}
+            />
           </div>
 
           <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
-              Status Transaksi
-            </label>
-            <select
+            <CustomSelect
+              label="Status Transaksi"
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none"
-            >
-              <option value="all">Semua Status</option>
-              <option value="sukses">Sukses</option>
-              <option value="gagal">Gagal / Dibatalkan</option>
-            </select>
+              onChange={(val) => setSelectedStatus(val)}
+              options={[
+                { value: 'all', label: 'Semua Status' },
+                { value: 'sukses', label: 'Sukses', badge: 'Berhasil', badgeType: 'success' },
+                { value: 'gagal', label: 'Gagal / Dibatalkan', badge: 'Refund', badgeType: 'warning' },
+              ]}
+            />
           </div>
         </div>
       </div>

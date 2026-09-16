@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Zap, 
   Smartphone, 
@@ -11,7 +11,10 @@ import {
   Receipt, 
   Sparkles,
   Search,
-  Plus
+  Plus,
+  Package,
+  Layers,
+  Check
 } from 'lucide-react';
 import { 
   ServiceCategory, 
@@ -21,13 +24,17 @@ import {
   TransactionType,
   QuickPresetProduct 
 } from '../types';
-import { QUICK_PRESETS } from '../data/initialData';
 import { formatRupiah, detectProvider } from '../utils/formatters';
+import { AccountSelect } from './CustomSelect';
 
 interface QuickEntryFormProps {
   accounts: ModalAccount[];
+  presets: QuickPresetProduct[];
   onSubmitTransaction: (trxData: Omit<RilcellTransaction, 'id' | 'invoiceNumber' | 'timestamp' | 'status' | 'syncedToSheets'>) => boolean;
   onSelectTransactionReceipt?: (trx: RilcellTransaction) => void;
+  onOpenMasterProducts?: () => void;
+  selectedPresetToFill?: QuickPresetProduct | null;
+  onClearSelectedPreset?: () => void;
 }
 
 const CATEGORY_ITEMS: { id: ServiceCategory; label: string; icon: React.ReactNode; defaultProfitType: TransactionType }[] = [
@@ -40,7 +47,12 @@ const CATEGORY_ITEMS: { id: ServiceCategory; label: string; icon: React.ReactNod
 
 export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   accounts,
+  presets,
   onSubmitTransaction,
+  onSelectTransactionReceipt,
+  onOpenMasterProducts,
+  selectedPresetToFill,
+  onClearSelectedPreset,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('pulsa_data');
   const [serviceName, setServiceName] = useState('');
@@ -55,6 +67,10 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   const [notes, setNotes] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  const [activeAutoFillPreset, setActiveAutoFillPreset] = useState<string | null>(null);
+  const [presetSearch, setPresetSearch] = useState('');
+
+  const targetInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-detect provider from target number
   const detectedProvider = useMemo(() => {
@@ -84,12 +100,21 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
     }
   };
 
-  // Filter presets for current category
-  const activePresets = useMemo(() => {
-    return QUICK_PRESETS.filter((p) => p.category === selectedCategory);
-  }, [selectedCategory]);
+  // Filter presets for current category and optional quick search
+  const categoryPresets = useMemo(() => {
+    return presets.filter((p) => {
+      if (p.category !== selectedCategory) return false;
+      if (presetSearch.trim()) {
+        const q = presetSearch.toLowerCase();
+        return p.name.toLowerCase().includes(q) || (p.provider || '').toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [presets, selectedCategory, presetSearch]);
 
+  // Apply a Preset to form automatically
   const applyPreset = (preset: QuickPresetProduct) => {
+    setSelectedCategory(preset.category);
     setServiceName(preset.name);
     setCostPrice(preset.costPrice.toString());
     setSellingPrice(preset.sellingPrice.toString());
@@ -100,7 +125,21 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
     } else {
       setAdminFee('0');
     }
+    setActiveAutoFillPreset(preset.name);
+
+    // Auto-focus the target number input for blazingly fast interaction!
+    setTimeout(() => {
+      targetInputRef.current?.focus();
+    }, 50);
   };
+
+  // If a preset was selected from Master Products view
+  useEffect(() => {
+    if (selectedPresetToFill) {
+      applyPreset(selectedPresetToFill);
+      if (onClearSelectedPreset) onClearSelectedPreset();
+    }
+  }, [selectedPresetToFill]);
 
   // Cost and Selling Numbers
   const numCost = parseInt(costPrice.replace(/[^0-9]/g, ''), 10) || 0;
@@ -160,6 +199,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
 
     if (!targetNumber.trim()) {
       setErrorMessage('Nomor Tujuan / ID Pelanggan / No. Rekening wajib diisi!');
+      targetInputRef.current?.focus();
       return;
     }
 
@@ -212,44 +252,169 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
       setSnRefNumber('');
       setCustomerName('');
       setNotes('');
+      setActiveAutoFillPreset(null);
       setTimeout(() => setSuccessNotice(null), 4000);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-200">
+    <div className="max-w-4xl mx-auto space-y-5 animate-in fade-in duration-200">
       {/* Category Pills Switcher */}
-      <div className="bg-white rounded-2xl p-2.5 shadow-xs border border-slate-200 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-        {CATEGORY_ITEMS.map((cat) => {
-          const isActive = selectedCategory === cat.id;
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => handleCategoryChange(cat.id)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-150 ${
-                isActive
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <span>{cat.icon}</span>
-              <span>{cat.label}</span>
-            </button>
-          );
-        })}
+      <div className="bg-white rounded-2xl p-2.5 shadow-xs border border-slate-200 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1">
+          {CATEGORY_ITEMS.map((cat) => {
+            const isActive = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => handleCategoryChange(cat.id)}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-150 ${
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {onOpenMasterProducts && (
+          <button
+            type="button"
+            onClick={onOpenMasterProducts}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 rounded-xl text-xs font-bold transition shrink-0 border border-slate-200"
+            title="Kelola Master Produk & Preset"
+          >
+            <Package className="w-4 h-4 text-emerald-600" />
+            <span>Master Produk</span>
+          </button>
+        )}
+      </div>
+
+      {/* Quick Pick Buttons / Product Chips (Master Products Auto-Fill) */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 bg-amber-100 text-amber-800 rounded-lg">
+              <Sparkles className="w-4 h-4" />
+            </span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                Pilihan Cepat Produk (Quick Pick Chips)
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Klik produk favorit untuk mengisi Nama, Server Saldo, Modal, dan Harga Jual secara otomatis
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Quick search inside presets */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Cari preset..."
+                value={presetSearch}
+                onChange={(e) => setPresetSearch(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-900 focus:bg-white focus:outline-none w-32 sm:w-40"
+              />
+            </div>
+
+            {onOpenMasterProducts && (
+              <button
+                type="button"
+                onClick={onOpenMasterProducts}
+                className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1 shrink-0"
+              >
+                <span>+ Atur Master</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Chips Container */}
+        {categoryPresets.length === 0 ? (
+          <div className="p-4 bg-slate-50 rounded-xl text-center border border-dashed border-slate-200 text-xs text-slate-500">
+            <span>Belum ada preset untuk kategori ini. </span>
+            {onOpenMasterProducts && (
+              <button
+                type="button"
+                onClick={onOpenMasterProducts}
+                className="text-emerald-600 font-bold hover:underline ml-1"
+              >
+                Tambah di Master Produk
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {categoryPresets.map((preset) => {
+              const isSelected = activeAutoFillPreset === preset.name;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => applyPreset(preset)}
+                  className={`group relative flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 border text-left ${
+                    isSelected
+                      ? 'bg-emerald-500 text-white border-emerald-600 shadow-md scale-[1.02]'
+                      : 'bg-slate-50 hover:bg-emerald-50/70 border-slate-200 hover:border-emerald-300 text-slate-800'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate max-w-[160px] sm:max-w-[200px]">
+                        {preset.name}
+                      </span>
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 stroke-[3] text-white shrink-0" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px]">
+                      <span
+                        className={`font-semibold uppercase tracking-wider px-1.5 py-0.2 rounded ${
+                          isSelected
+                            ? 'bg-emerald-700 text-emerald-100'
+                            : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {preset.defaultSource}
+                      </span>
+                      <span
+                        className={`font-bold ${
+                          isSelected ? 'text-amber-200' : 'text-emerald-700'
+                        }`}
+                      >
+                        {formatRupiah(preset.sellingPrice)}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Main Entry Form Card */}
       <div className="bg-white rounded-2xl p-5 sm:p-7 border border-slate-200 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-5 border-b border-slate-100">
           <div>
-            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-              <span>Form Input Transaksi Kasir</span>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                Quick Entry
-              </span>
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-black text-slate-900">
+                Form Input Transaksi Kasir
+              </h2>
+              {activeAutoFillPreset && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 animate-in fade-in">
+                  <Check className="w-3 h-3 text-emerald-600" />
+                  <span>Auto-Fill: {activeAutoFillPreset}</span>
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-500 mt-0.5">
               Input cepat penjualan pulsa, token, top-up e-wallet, dan transfer bank
             </p>
@@ -282,34 +447,6 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
           </div>
         </div>
 
-        {/* Quick Presets Pills */}
-        {activePresets.length > 0 && (
-          <div className="mb-6 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>Pilihan Cepat (Presets):</span>
-              </span>
-              <span className="text-[11px] text-slate-400">Klik untuk isi formulir instan</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {activePresets.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => applyPreset(preset)}
-                  className="px-2.5 py-1.5 bg-white hover:bg-emerald-50 hover:border-emerald-300 border border-slate-200 text-slate-700 hover:text-emerald-800 text-xs font-semibold rounded-lg shadow-2xs transition flex items-center gap-1.5"
-                >
-                  <span>{preset.name}</span>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded">
-                    {formatRupiah(preset.sellingPrice)}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Notifications */}
         {errorMessage && (
           <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
@@ -341,6 +478,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                 )}
               </div>
               <input
+                ref={targetInputRef}
                 type="text"
                 required
                 placeholder="Contoh: 08123456789 / No. Meter PLN"
@@ -360,34 +498,27 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                 required
                 placeholder="Contoh: Telkomsel Pulsa 25.000 / Top Up DANA 100K"
                 value={serviceName}
-                onChange={(e) => setServiceName(e.target.value)}
+                onChange={(e) => {
+                  setServiceName(e.target.value);
+                  if (activeAutoFillPreset && e.target.value !== activeAutoFillPreset) {
+                    setActiveAutoFillPreset(null);
+                  }
+                }}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
               />
             </div>
 
-            {/* Sumber Saldo Terpotong */}
+            {/* Sumber Saldo Terpotong (CUSTOM TAILWIND UI SELECT) */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-700">
-                  Sumber Saldo Terpotong <span className="text-rose-500">*</span>
-                </label>
-                <span className={`text-[11px] font-mono font-bold ${isBalanceInsufficient ? 'text-rose-600' : 'text-slate-500'}`}>
-                  Saldo: {formatRupiah(accountBalance)}
-                </span>
-              </div>
-              <select
+              <AccountSelect
+                id="select-source-account"
+                label="Sumber Saldo Terpotong *"
+                accounts={accounts}
                 value={sourceAccountId}
-                onChange={(e) => setSourceAccountId(e.target.value as AccountKey)}
-                className={`w-full bg-slate-50 border rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:bg-white focus:outline-none ${
-                  isBalanceInsufficient ? 'border-rose-400 bg-rose-50/50' : 'border-slate-300 focus:border-emerald-500'
-                }`}
-              >
-                {accounts.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name} — Saldo: {formatRupiah(acc.balance)} {acc.balance < 100000 ? '⚠️ (Menipis)' : ''}
-                  </option>
-                ))}
-              </select>
+                onChange={(accKey) => setSourceAccountId(accKey)}
+                requiredAmount={numCost}
+                error={isBalanceInsufficient}
+              />
               {isBalanceInsufficient && (
                 <p className="text-[11px] text-rose-600 font-bold mt-1">
                   Saldo akun modal ini tidak mencukupi untuk transaksi ini!
@@ -484,7 +615,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
               />
             </div>
 
-            {/* Nama Pelanggan / Catatan */}
+            {/* Nama Pelanggan & Catatan */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Nama Pelanggan & Catatan (Opsional)

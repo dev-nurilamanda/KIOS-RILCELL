@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ModalAccount, AccountKey, BalanceTransfer } from '../types';
 import { formatRupiah, formatDate } from '../utils/formatters';
+import { AccountSelect } from './CustomSelect';
 
 interface SaldoModalManagerProps {
   accounts: ModalAccount[];
@@ -468,48 +469,27 @@ export const SaldoModalManager: React.FC<SaldoModalManagerProps> = ({
 
               {/* Dari Akun (Sumber) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Sumber Saldo (Dari):
-                </label>
-                <select
+                <AccountSelect
+                  id="select-transfer-from"
+                  label="Sumber Saldo (Dari):"
+                  accounts={accounts}
                   value={transferFrom}
-                  onChange={(e) => setTransferFrom(e.target.value as AccountKey | 'kas_tunai')}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-                >
-                  <optgroup label="Akun Bank & Kas">
-                    <option value="bsi_byond">BYOND by BSI (Saldo: {formatRupiah(accounts.find(a => a.id === 'bsi_byond')?.balance || 0)})</option>
-                    <option value="kas_tunai">Kas Tunai Laci (Tersedia: {formatRupiah(cashOnHand)})</option>
-                  </optgroup>
-                  <optgroup label="E-Wallet & Merchant">
-                    <option value="dana">DANA (Saldo: {formatRupiah(accounts.find(a => a.id === 'dana')?.balance || 0)})</option>
-                    <option value="gopay">GoPay (Saldo: {formatRupiah(accounts.find(a => a.id === 'gopay')?.balance || 0)})</option>
-                    <option value="shopeepay">ShopeePay (Saldo: {formatRupiah(accounts.find(a => a.id === 'shopeepay')?.balance || 0)})</option>
-                    <option value="ovo">OVO (Saldo: {formatRupiah(accounts.find(a => a.id === 'ovo')?.balance || 0)})</option>
-                    <option value="gopay_merchant">GoPay Merchant (Saldo: {formatRupiah(accounts.find(a => a.id === 'gopay_merchant')?.balance || 0)})</option>
-                  </optgroup>
-                  <optgroup label="Server Pulsa">
-                    <option value="wekios">WeKios (Saldo: {formatRupiah(accounts.find(a => a.id === 'wekios')?.balance || 0)})</option>
-                    <option value="digipos">DigiPOS Aja! (Saldo: {formatRupiah(accounts.find(a => a.id === 'digipos')?.balance || 0)})</option>
-                  </optgroup>
-                </select>
+                  onChange={(accKey) => setTransferFrom(accKey)}
+                  includeCash={true}
+                  cashOnHand={cashOnHand}
+                  requiredAmount={parseInt(transferAmount.replace(/[^0-9]/g, ''), 10) || 0}
+                />
               </div>
 
               {/* Ke Akun (Tujuan) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Akun Tujuan Top-Up (Ke):
-                </label>
-                <select
+                <AccountSelect
+                  id="select-transfer-to"
+                  label="Akun Tujuan Top-Up (Ke):"
+                  accounts={accounts}
                   value={transferTo}
-                  onChange={(e) => setTransferTo(e.target.value as AccountKey)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-                >
-                  {accounts.map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.name} (Saldo Saat Ini: {formatRupiah(acc.balance)})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(accKey) => setTransferTo(accKey)}
+                />
               </div>
 
               {/* Nominal Transfer */}
