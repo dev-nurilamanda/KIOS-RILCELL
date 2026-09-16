@@ -1,0 +1,6 @@
+{
+  "name": "Aplikasi Kasir (POS)",
+  "description": "Aplikasi kasir berbasis web modern untuk transaksi penjualan cepat, cetak struk belanja, manajemen stok produk, dan laporan pendapatan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
