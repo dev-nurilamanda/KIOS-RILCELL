@@ -18,7 +18,10 @@ import {
   CreditCard, 
   Headphones, 
   Banknote, 
-  QrCode 
+  QrCode,
+  Users,
+  UserCheck,
+  UserPlus
 } from 'lucide-react';
 import { 
   ServiceCategory, 
@@ -26,12 +29,14 @@ import {
   ModalAccount, 
   RilcellTransaction, 
   TransactionType,
-  QuickPresetProduct 
+  QuickPresetProduct,
+  CustomerRecord
 } from '../types';
 import { formatRupiah, detectProvider } from '../utils/formatters';
 import { AccountSelect } from './CustomSelect';
 import { ProductSearchDropdown } from './ProductSearchDropdown';
 import { PaymentDestinationSelect } from './PaymentDestinationSelect';
+import { CustomerPickerModal } from './CustomerPickerModal';
 
 interface QuickEntryFormProps {
   accounts: ModalAccount[];
@@ -42,6 +47,15 @@ interface QuickEntryFormProps {
   onOpenMasterProducts?: () => void;
   selectedPresetToFill?: QuickPresetProduct | null;
   onClearSelectedPreset?: () => void;
+  customers?: CustomerRecord[];
+  selectedCustomerToFill?: {
+    customer: CustomerRecord;
+    category: ServiceCategory;
+    targetValue: string;
+  } | null;
+  onClearSelectedCustomer?: () => void;
+  onOpenCustomerManager?: () => void;
+  onQuickSaveCustomer?: (newCust: Omit<CustomerRecord, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
 const CATEGORY_ITEMS: { id: ServiceCategory; label: string; icon: React.ReactNode; defaultProfitType: TransactionType }[] = [
@@ -64,6 +78,11 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   onOpenMasterProducts,
   selectedPresetToFill,
   onClearSelectedPreset,
+  customers = [],
+  selectedCustomerToFill,
+  onClearSelectedCustomer,
+  onOpenCustomerManager,
+  onQuickSaveCustomer,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('pulsa_data');
   const [serviceName, setServiceName] = useState('');
@@ -80,6 +99,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [activeAutoFillPreset, setActiveAutoFillPreset] = useState<string | null>(null);
   const [matchedPresetId, setMatchedPresetId] = useState<string | null>(null);
+  const [isCustomerPickerOpen, setIsCustomerPickerOpen] = useState(false);
 
   // Custom Form Fields State (Quantity, Payment Method & Destination Account)
   const [quantity, setQuantity] = useState<number>(1);
@@ -89,6 +109,37 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   const [destinationAccountId, setDestinationAccountId] = useState<AccountKey>('gopay_merchant');
 
   const targetInputRef = useRef<HTMLInputElement>(null);
+
+  // Dynamic labels and placeholders based on category
+  const targetFieldLabel = useMemo(() => {
+    switch (selectedCategory) {
+      case 'pln_tagihan':
+        return 'No Meter / ID Pelanggan';
+      case 'topup_ewallet':
+        return 'Nomor HP E-Wallet';
+      case 'transfer_tarik':
+        return 'Nomor Rekening Tujuan';
+      case 'game_tv':
+        return 'ID Game & Server';
+      default:
+        return 'Nomor HP Tujuan';
+    }
+  }, [selectedCategory]);
+
+  const targetFieldPlaceholder = useMemo(() => {
+    switch (selectedCategory) {
+      case 'pln_tagihan':
+        return 'Contoh: 14234567890 / 51234567890';
+      case 'topup_ewallet':
+        return 'Contoh: 081234567890 (DANA, Gopay, OVO)';
+      case 'transfer_tarik':
+        return 'Contoh: 1230984711 (No. Rekening)';
+      case 'game_tv':
+        return 'Contoh: 84729104 (2194) / ID Free Fire';
+      default:
+        return 'Contoh: 081234567890';
+    }
+  }, [selectedCategory]);
 
   // Auto-detect provider from target number
   const detectedProvider = useMemo(() => {
@@ -178,6 +229,19 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
       if (onClearSelectedPreset) onClearSelectedPreset();
     }
   }, [selectedPresetToFill]);
+
+  // If a customer was selected from Customer Manager
+  useEffect(() => {
+    if (selectedCustomerToFill) {
+      handleCategoryChange(selectedCustomerToFill.category);
+      setTargetNumber(selectedCustomerToFill.targetValue);
+      setCustomerName(selectedCustomerToFill.customer.name);
+      setTimeout(() => {
+        targetInputRef.current?.focus();
+      }, 50);
+      if (onClearSelectedCustomer) onClearSelectedCustomer();
+    }
+  }, [selectedCustomerToFill]);
 
   // Cost and Selling Numbers
   const numCost = parseInt(costPrice.replace(/[^0-9]/g, ''), 10) || 0;
@@ -535,9 +599,20 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
               {/* No Meter */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  No Meter <span className="text-rose-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">
+                    No Meter / ID Pelanggan <span className="text-rose-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomerPickerOpen(true)}
+                    className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-lg flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                    title="Pilih dari database pelanggan"
+                  >
+                    <Users className="w-3 h-3" />
+                    <span>Pilih Pelanggan</span>
+                  </button>
+                </div>
                 <input
                   ref={targetInputRef}
                   type="text"
@@ -547,6 +622,21 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                   onChange={(e) => setTargetNumber(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold font-mono text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
                 />
+                {customerName && (
+                  <div className="mt-1 flex items-center justify-between px-2 py-0.5 bg-emerald-50/80 border border-emerald-200 rounded-md">
+                    <span className="text-[11px] text-emerald-800 font-bold flex items-center gap-1 truncate">
+                      <UserCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                      Pelanggan: {customerName}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCustomerName('')}
+                      className="text-[10px] text-slate-400 hover:text-rose-600 font-semibold underline shrink-0 cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Jenis Layanan / Nama Produk */}
@@ -660,27 +750,53 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                       Harga Jual (Uang diterima dari pelanggan), Jenis Pembayaran
                ============================================================ */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-              {/* Nomor Hp */}
+              {/* Nomor Tujuan */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-slate-700">
-                    Nomor Hp <span className="text-rose-500">*</span>
+                    {targetFieldLabel} <span className="text-rose-500">*</span>
                   </label>
-                  {detectedProvider && (
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                      {detectedProvider}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {detectedProvider && selectedCategory === 'pulsa_data' && (
+                      <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        {detectedProvider}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomerPickerOpen(true)}
+                      className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-lg flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                      title="Pilih dari database pelanggan"
+                    >
+                      <Users className="w-3 h-3" />
+                      <span>Pilih Pelanggan</span>
+                    </button>
+                  </div>
                 </div>
                 <input
                   ref={targetInputRef}
-                  type="tel"
+                  type={selectedCategory === 'transfer_tarik' ? 'text' : 'tel'}
                   required
-                  placeholder="Contoh: 081234567890"
+                  placeholder={targetFieldPlaceholder}
                   value={targetNumber}
                   onChange={(e) => setTargetNumber(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold font-mono text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
                 />
+                {customerName && (
+                  <div className="mt-1 flex items-center justify-between px-2 py-0.5 bg-emerald-50/80 border border-emerald-200 rounded-md">
+                    <span className="text-[11px] text-emerald-800 font-bold flex items-center gap-1 truncate">
+                      <UserCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                      Pelanggan: {customerName}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCustomerName('')}
+                      className="text-[10px] text-slate-400 hover:text-rose-600 font-semibold underline shrink-0 cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Jenis Layanan / Nama Produk */}
@@ -785,10 +901,98 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                   sellingPrice={numSell}
                 />
               </div>
+
+              {/* Nama Pelanggan & Catatan Transaksi */}
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-200/80">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700">
+                      Nama Pelanggan <span className="text-slate-400 font-normal">(Opsional)</span>
+                    </label>
+                    {targetNumber.trim() && customerName.trim() && onQuickSaveCustomer && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onQuickSaveCustomer({
+                            name: customerName.trim(),
+                            phone: selectedCategory === 'pulsa_data' ? targetNumber.trim() : '',
+                            notes: `Pelanggan transaksi ${serviceName || ''}`,
+                            meterNumbers: selectedCategory === 'pln_tagihan' ? [{
+                              id: `meter-${Date.now()}`,
+                              meterNumber: targetNumber.trim(),
+                              ownerName: customerName.trim(),
+                            }] : [],
+                            ewallets: selectedCategory === 'topup_ewallet' ? [{
+                              id: `ew-${Date.now()}`,
+                              walletType: 'dana',
+                              phoneNumber: targetNumber.trim(),
+                              accountHolder: customerName.trim(),
+                            }] : [],
+                            bankAccounts: selectedCategory === 'transfer_tarik' ? [{
+                              id: `bk-${Date.now()}`,
+                              bankName: 'Bank',
+                              accountNumber: targetNumber.trim(),
+                              accountHolder: customerName.trim(),
+                            }] : [],
+                            gameProfiles: selectedCategory === 'game_tv' ? [{
+                              id: `gm-${Date.now()}`,
+                              gameName: 'Game',
+                              userId: targetNumber.trim(),
+                            }] : [],
+                          });
+                          setSuccessNotice(`Data pelanggan "${customerName}" berhasil disimpan ke database!`);
+                          setTimeout(() => setSuccessNotice(null), 3000);
+                        }}
+                        className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer"
+                        title="Simpan nomor ini ke database pelanggan"
+                      >
+                        <UserPlus className="w-3 h-3 text-emerald-600" />
+                        <span>Simpan ke Database</span>
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Pak Budi, Mas Dimas..."
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Catatan Transaksi <span className="text-slate-400 font-normal">(Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Keterangan / info tambahan..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
             </div>
           )}
         </form>
       </div>
+
+      {/* Customer Picker Modal */}
+      <CustomerPickerModal
+        isOpen={isCustomerPickerOpen}
+        onClose={() => setIsCustomerPickerOpen(false)}
+        customers={customers}
+        currentCategory={selectedCategory}
+        onSelectCustomer={(cust, selectedTarget) => {
+          setTargetNumber(selectedTarget);
+          setCustomerName(cust.name);
+          setTimeout(() => {
+            targetInputRef.current?.focus();
+          }, 50);
+        }}
+        onOpenCustomerManager={onOpenCustomerManager}
+      />
 
       {/* Floating Fixed Bottom Bar for Simpan & Catat Transaksi (Mengambang & Tetap di Layar) */}
       <div className="fixed bottom-[68px] md:bottom-4 left-0 right-0 z-35 px-3 sm:px-6 pointer-events-none transition-all">

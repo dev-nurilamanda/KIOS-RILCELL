@@ -17,7 +17,10 @@ import {
   Landmark, 
   Gamepad2,
   Trash2,
-  Check
+  Check,
+  X,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { RilcellTransaction, ServiceCategory, AccountKey, ModalAccount, RilcellSettings } from '../types';
 import { formatRupiah, formatDate, generateWhatsAppReceipt } from '../utils/formatters';
@@ -46,6 +49,16 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [dateRange, setDateRange] = useState<'all' | 'today' | '7days' | 'this_month'>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  // Count active dropdown filters
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedCategory !== 'all') count++;
+    if (selectedAccount !== 'all') count++;
+    if (selectedStatus !== 'all') count++;
+    return count;
+  }, [selectedCategory, selectedAccount, selectedStatus]);
 
   // Filter logic
   const filteredTransactions = useMemo(() => {
@@ -184,118 +197,156 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
   };
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-200">
-      {/* Top Filter & Search Bar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Search Box */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari no. tujuan, nama layanan, no. invoice, atau SN..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3.5 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
+    <div className="space-y-4 animate-in fade-in duration-200">
+      {/* Sticky Header: Pencarian, Filter Rentang Waktu, Dropdown Filter & Ringkasan Transaksi (Tidak terpengaruh scrolling) */}
+      <div className="sticky top-16 z-30 -mt-1 pt-1 pb-2 bg-slate-100/95 backdrop-blur-md space-y-2">
+        {/* Main Filter & Search Card */}
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-slate-200/90 shadow-sm shadow-slate-900/5 space-y-2.5">
+          {/* Top Row: Search Box + Filter Mobile Toggle + Date Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            {/* Search Box */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari no. tujuan, layanan, invoice, nama customer, atau SN..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-8 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  title="Hapus pencarian"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
 
-          {/* Date Filter */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0 overflow-x-auto">
-            {(
-              [
-                { id: 'all', label: 'Semua' },
-                { id: 'today', label: 'Hari Ini' },
-                { id: '7days', label: '7 Hari' },
-                { id: 'this_month', label: 'Bulan Ini' },
-              ] as const
-            ).map((d) => (
+            {/* Actions: Mobile Filter Toggle + Date Filter Pills */}
+            <div className="flex items-center gap-1.5 shrink-0 justify-between sm:justify-start">
+              {/* Mobile Filter Dropdowns Toggle Button */}
               <button
-                key={d.id}
-                onClick={() => setDateRange(d.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-                  dateRange === d.id
-                    ? 'bg-white text-emerald-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                type="button"
+                onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+                className={`sm:hidden px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0 border cursor-pointer ${
+                  activeFiltersCount > 0 || isFilterExpanded
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : 'bg-slate-100 text-slate-600 border-slate-200'
                 }`}
+                title="Filter kategori, akun & status"
               >
-                {d.label}
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filter</span>
+                {activeFiltersCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
+                    {activeFiltersCount}
+                  </span>
+                )}
+                {isFilterExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
-            ))}
+
+              {/* Date Filter Pills */}
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0 overflow-x-auto no-scrollbar">
+                {(
+                  [
+                    { id: 'all', label: 'Semua' },
+                    { id: 'today', label: 'Hari Ini' },
+                    { id: '7days', label: '7 Hari' },
+                    { id: 'this_month', label: 'Bulan Ini' },
+                  ] as const
+                ).map((d) => (
+                  <button
+                    key={d.id}
+                    onClick={() => setDateRange(d.id)}
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                      dateRange === d.id
+                        ? 'bg-white text-emerald-700 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Category, Account & Status Selectors (Always visible on desktop sm:, collapsible on mobile) */}
+          <div className={`${isFilterExpanded ? 'grid' : 'hidden'} sm:grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100`}>
+            <div>
+              <CustomSelect
+                label="Kategori Layanan"
+                value={selectedCategory}
+                onChange={(val) => setSelectedCategory(val)}
+                options={[
+                  { value: 'all', label: 'Semua Kategori' },
+                  { value: 'pulsa_data', label: 'Pulsa & Paket Data', icon: <Smartphone className="w-3.5 h-3.5 text-blue-600" /> },
+                  { value: 'pln_tagihan', label: 'Token PLN & Tagihan', icon: <Zap className="w-3.5 h-3.5 text-amber-600" /> },
+                  { value: 'topup_ewallet', label: 'Top-Up E-Wallet', icon: <Wallet className="w-3.5 h-3.5 text-emerald-600" /> },
+                  { value: 'transfer_tarik', label: 'Transfer & Tarik Tunai', icon: <Landmark className="w-3.5 h-3.5 text-purple-600" /> },
+                  { value: 'game_tv', label: 'Game & Kuota TV', icon: <Gamepad2 className="w-3.5 h-3.5 text-rose-600" /> },
+                ]}
+              />
+            </div>
+
+            <div>
+              <CustomSelect
+                label="Sumber Saldo Modal"
+                value={selectedAccount}
+                onChange={(val) => setSelectedAccount(val)}
+                options={[
+                  { value: 'all', label: 'Semua Sumber Saldo' },
+                  ...accounts.map((acc) => ({
+                    value: acc.id,
+                    label: acc.name,
+                    sublabel: `Saldo: ${formatRupiah(acc.balance)}`,
+                    badge: acc.balance < 100000 ? 'Menipis' : undefined,
+                    badgeType: (acc.balance < 100000 ? 'warning' : 'neutral') as any,
+                  })),
+                ]}
+              />
+            </div>
+
+            <div>
+              <CustomSelect
+                label="Status Transaksi"
+                value={selectedStatus}
+                onChange={(val) => setSelectedStatus(val)}
+                options={[
+                  { value: 'all', label: 'Semua Status' },
+                  { value: 'sukses', label: 'Sukses', badge: 'Berhasil', badgeType: 'success' },
+                  { value: 'gagal', label: 'Gagal / Dibatalkan', badge: 'Refund', badgeType: 'warning' },
+                ]}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Category & Account Selectors with Custom UI Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-100">
-          <div>
-            <CustomSelect
-              label="Kategori Layanan"
-              value={selectedCategory}
-              onChange={(val) => setSelectedCategory(val)}
-              options={[
-                { value: 'all', label: 'Semua Kategori' },
-                { value: 'pulsa_data', label: 'Pulsa & Paket Data', icon: <Smartphone className="w-3.5 h-3.5 text-blue-600" /> },
-                { value: 'pln_tagihan', label: 'Token PLN & Tagihan', icon: <Zap className="w-3.5 h-3.5 text-amber-600" /> },
-                { value: 'topup_ewallet', label: 'Top-Up E-Wallet', icon: <Wallet className="w-3.5 h-3.5 text-emerald-600" /> },
-                { value: 'transfer_tarik', label: 'Transfer & Tarik Tunai', icon: <Landmark className="w-3.5 h-3.5 text-purple-600" /> },
-                { value: 'game_tv', label: 'Game & Kuota TV', icon: <Gamepad2 className="w-3.5 h-3.5 text-rose-600" /> },
-              ]}
-            />
+        {/* Filter Stats Mini Ribbon (Sticky bersama header) */}
+        <div className="bg-slate-900/95 text-white backdrop-blur-md rounded-xl p-2.5 sm:p-3 px-3.5 sm:px-4 shadow-sm border border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div>
+              <span className="text-slate-400 text-[10px] block font-medium">Transaksi</span>
+              <span className="font-bold text-white text-xs">
+                {summary.successCount} sukses {summary.failCount > 0 && `(${summary.failCount} gagal)`}
+              </span>
+            </div>
+            <div className="border-l border-slate-800 pl-3 sm:pl-4">
+              <span className="text-slate-400 text-[10px] block font-medium">Total Omzet</span>
+              <span className="font-bold text-emerald-400 text-xs sm:text-sm">{formatRupiah(summary.totalSell)}</span>
+            </div>
+            <div className="border-l border-slate-800 pl-3 sm:pl-4">
+              <span className="text-slate-400 text-[10px] block font-medium">Laba Bersih</span>
+              <span className="font-bold text-amber-400 text-xs sm:text-sm">{formatRupiah(summary.totalProfit)}</span>
+            </div>
           </div>
-
-          <div>
-            <CustomSelect
-              label="Sumber Saldo Modal"
-              value={selectedAccount}
-              onChange={(val) => setSelectedAccount(val)}
-              options={[
-                { value: 'all', label: 'Semua Sumber Saldo' },
-                ...accounts.map((acc) => ({
-                  value: acc.id,
-                  label: acc.name,
-                  sublabel: `Saldo: ${formatRupiah(acc.balance)}`,
-                  badge: acc.balance < 100000 ? 'Menipis' : undefined,
-                  badgeType: (acc.balance < 100000 ? 'warning' : 'neutral') as any,
-                })),
-              ]}
-            />
+          <div className="text-[11px] text-slate-400 font-medium">
+            {filteredTransactions.length} dari {transactions.length} transaksi
           </div>
-
-          <div>
-            <CustomSelect
-              label="Status Transaksi"
-              value={selectedStatus}
-              onChange={(val) => setSelectedStatus(val)}
-              options={[
-                { value: 'all', label: 'Semua Status' },
-                { value: 'sukses', label: 'Sukses', badge: 'Berhasil', badgeType: 'success' },
-                { value: 'gagal', label: 'Gagal / Dibatalkan', badge: 'Refund', badgeType: 'warning' },
-              ]}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Filter Stats Mini Ribbon */}
-      <div className="bg-slate-900 text-white rounded-xl p-3.5 px-4 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-4">
-          <div>
-            <span className="text-slate-400 text-[10px] block">Transaksi</span>
-            <span className="font-bold text-white">
-              {summary.successCount} sukses {summary.failCount > 0 && `(${summary.failCount} gagal)`}
-            </span>
-          </div>
-          <div className="border-l border-slate-800 pl-4">
-            <span className="text-slate-400 text-[10px] block">Total Omzet</span>
-            <span className="font-bold text-emerald-400">{formatRupiah(summary.totalSell)}</span>
-          </div>
-          <div className="border-l border-slate-800 pl-4">
-            <span className="text-slate-400 text-[10px] block">Laba Bersih</span>
-            <span className="font-bold text-amber-400">{formatRupiah(summary.totalProfit)}</span>
-          </div>
-        </div>
-        <div className="text-[11px] text-slate-400">
-          Menampilkan {filteredTransactions.length} dari {transactions.length} transaksi
         </div>
       </div>
 

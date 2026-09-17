@@ -1,4 +1,4 @@
-import { ModalAccount, RilcellSettings, QuickPresetProduct, RilcellTransaction } from '../types';
+import { ModalAccount, RilcellSettings, QuickPresetProduct, RilcellTransaction, CustomerRecord } from '../types';
 
 export const INITIAL_MODAL_ACCOUNTS: ModalAccount[] = [
   {
@@ -411,3 +411,97 @@ export const INITIAL_TRANSACTIONS: RilcellTransaction[] = [
     customerName: 'Pak Wahyu',
   },
 ];
+
+export const INITIAL_CUSTOMERS: CustomerRecord[] = [
+  {
+    id: 'cust-001',
+    name: 'Budi Santoso',
+    phone: '081234567890',
+    address: 'Jl. Melati No. 12 (Sebelah Toko Buah)',
+    notes: 'Langganan beli pulsa, token listrik, dan diamond Mobile Legends',
+    ewallets: [
+      { id: 'ew-1', walletType: 'DANA', phoneNumber: '081234567890', accountHolder: 'Budi Santoso' },
+      { id: 'ew-2', walletType: 'GoPay', phoneNumber: '081234567890', accountHolder: 'Budi S' },
+    ],
+    bankAccounts: [
+      { id: 'bk-1', bankName: 'BCA', accountNumber: '1230984711', accountHolder: 'Budi Santoso' },
+      { id: 'bk-2', bankName: 'BRI', accountNumber: '002901847102501', accountHolder: 'Budi Santoso' },
+    ],
+    meterNumbers: [
+      { id: 'mt-1', meterNumber: '142345678901', ownerName: 'Budi Santoso', tariffPower: 'R1/1300 VA', locationNote: 'Rumah Utama' },
+    ],
+    gameProfiles: [
+      { id: 'gm-1', gameKey: 'mlbb', gameName: 'Mobile Legends: Bang Bang', userId: '84729104', zoneId: '2194', nickname: 'Budi_Slayer' },
+      { id: 'gm-2', gameKey: 'ff', gameName: 'Free Fire', userId: '298174619', nickname: 'Budi_Boy' },
+    ],
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 10,
+    updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 2,
+  },
+  {
+    id: 'cust-002',
+    name: 'Siti Rahmawati',
+    phone: '085712349988',
+    address: 'Komplek Griya Indah Blok C No. 4',
+    notes: 'Langganan token PLN dan top-up ShopeePay mingguan',
+    ewallets: [
+      { id: 'ew-3', walletType: 'ShopeePay', phoneNumber: '085712349988', accountHolder: 'Siti Rahmawati' },
+      { id: 'ew-4', walletType: 'OVO', phoneNumber: '085712349988', accountHolder: 'Siti Rahma' },
+    ],
+    bankAccounts: [
+      { id: 'bk-3', bankName: 'Mandiri', accountNumber: '1400019284719', accountHolder: 'Siti Rahmawati' },
+    ],
+    meterNumbers: [
+      { id: 'mt-2', meterNumber: '532190847112', ownerName: 'Siti Rahma', tariffPower: 'R1M/900 VA', locationNote: 'Warung Depan' },
+    ],
+    gameProfiles: [],
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7,
+    updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 1,
+  },
+  {
+    id: 'cust-003',
+    name: 'Rian Hidayat',
+    phone: '089611223344',
+    address: 'Kos Pondok Mahasiswa Kamar 07',
+    notes: 'Gamer langganan diamond & top-up Genshin / Valorant',
+    ewallets: [
+      { id: 'ew-5', walletType: 'DANA', phoneNumber: '089611223344', accountHolder: 'Rian Hidayat' },
+      { id: 'ew-6', walletType: 'GoPay', phoneNumber: '089611223344', accountHolder: 'Rian H' },
+    ],
+    bankAccounts: [
+      { id: 'bk-4', bankName: 'SeaBank', accountNumber: '90128471920', accountHolder: 'Rian Hidayat' },
+      { id: 'bk-5', bankName: 'Bank Jago', accountNumber: '104928172910', accountHolder: 'Rian Hidayat' },
+    ],
+    meterNumbers: [
+      { id: 'mt-3', meterNumber: '321980471234', ownerName: 'Hidayat', tariffPower: 'R1/1300 VA', locationNote: 'Kos Kamar 7' },
+    ],
+    gameProfiles: [
+      { id: 'gm-3', gameKey: 'mlbb', gameName: 'Mobile Legends: Bang Bang', userId: '92847102', zoneId: '2041', nickname: 'Rian_Godz' },
+      { id: 'gm-4', gameKey: 'genshin', gameName: 'Genshin Impact', userId: '812948192', zoneId: 'Asia', nickname: 'AetherID' },
+      { id: 'gm-5', gameKey: 'valorant', gameName: 'Valorant', userId: 'Rian#ID1', nickname: 'Rian#ID1' },
+      { id: 'gm-6', gameKey: 'pubgm', gameName: 'PUBG Mobile', userId: '5123984712', nickname: 'RianSniper' },
+    ],
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 5,
+    updatedAt: Date.now() - 1000 * 60 * 60 * 12,
+  },
+  {
+    id: 'cust-004',
+    name: 'Pak Wahyu',
+    phone: '082199887766',
+    address: 'Jl. Raya Pasar Baru No. 88',
+    notes: 'Sering kirim uang ke kampung (BCA / BSI) dan isi token PLN',
+    ewallets: [
+      { id: 'ew-7', walletType: 'LinkAja', phoneNumber: '082199887766', accountHolder: 'Wahyu Sudrajat' },
+    ],
+    bankAccounts: [
+      { id: 'bk-6', bankName: 'BSI', accountNumber: '7192048891', accountHolder: 'Wahyu Sudrajat' },
+      { id: 'bk-7', bankName: 'BCA', accountNumber: '8820194819', accountHolder: 'Nani Sumarni (Istri)' },
+    ],
+    meterNumbers: [
+      { id: 'mt-4', meterNumber: '142981047192', ownerName: 'Wahyu S', tariffPower: 'B1/2200 VA', locationNote: 'Rumah & Toko' },
+    ],
+    gameProfiles: [],
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 14,
+    updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 3,
+  },
+];
+

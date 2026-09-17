@@ -9,12 +9,13 @@ import {
   AlertTriangle, 
   Clock, 
   UserCheck,
-  Package
+  Package,
+  Users
 } from 'lucide-react';
 import { RilcellSettings, ModalAccount } from '../types';
 import { PWAInstallButton } from './PWAInstallButton';
 
-export type RilcellNavTab = 'entry' | 'saldo' | 'products' | 'history' | 'analytics' | 'settings';
+export type RilcellNavTab = 'entry' | 'customers' | 'saldo' | 'products' | 'history' | 'analytics' | 'settings';
 
 interface NavbarProps {
   activeTab: RilcellNavTab;
@@ -23,6 +24,7 @@ interface NavbarProps {
   accounts: ModalAccount[];
   lowBalanceCount: number;
   presetsCount?: number;
+  customersCount?: number;
   onOpenInstallGuide?: () => void;
 }
 
@@ -54,6 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: 'entry' as const, label: 'Transaksi Baru', shortLabel: 'Transaksi', icon: Zap },
+    { id: 'customers' as const, label: 'Database Pelanggan', shortLabel: 'Pelanggan', icon: Users },
     { 
       id: 'saldo' as const, 
       label: 'Saldo Modal', 
@@ -68,9 +71,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'settings' as const, label: 'Pengaturan', shortLabel: 'Pengaturan', icon: Settings },
   ];
 
-  // Mobile Bottom Navigation only needs the 3 primary counter workflows (Saldo, Statistik, Pengaturan moved to Top Right)
+  // Mobile Bottom Navigation: Transaksi, Pelanggan, Produk, Riwayat
   const mobileBottomNavItems = [
     { id: 'entry' as const, label: 'Transaksi Baru', shortLabel: 'Transaksi', icon: Zap },
+    { id: 'customers' as const, label: 'Pelanggan', shortLabel: 'Pelanggan', icon: Users },
     { id: 'products' as const, label: 'Daftar Produk', shortLabel: 'Produk', icon: Package },
     { id: 'history' as const, label: 'Riwayat & Kas', shortLabel: 'Riwayat', icon: History },
   ];

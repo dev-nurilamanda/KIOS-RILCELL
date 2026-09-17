@@ -5,13 +5,16 @@ import {
   BalanceTransfer, 
   RilcellSettings, 
   AccountKey,
-  QuickPresetProduct 
+  QuickPresetProduct,
+  CustomerRecord,
+  ServiceCategory
 } from './types';
 import { 
   INITIAL_MODAL_ACCOUNTS, 
   INITIAL_SETTINGS, 
   INITIAL_TRANSACTIONS,
-  QUICK_PRESETS 
+  QUICK_PRESETS,
+  INITIAL_CUSTOMERS
 } from './data/initialData';
 import { Navbar, RilcellNavTab } from './components/Navbar';
 import { QuickEntryForm } from './components/QuickEntryForm';
@@ -20,6 +23,7 @@ import { TransactionHistoryView } from './components/TransactionHistoryView';
 import { DashboardAnalyticsView } from './components/DashboardAnalyticsView';
 import { SettingsView } from './components/SettingsView';
 import { MasterProductManager } from './components/MasterProductManager';
+import { CustomerManager } from './components/CustomerManager';
 import { RilcellReceiptModal } from './components/RilcellReceiptModal';
 import { InstallGuideModal } from './components/InstallGuideModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -34,6 +38,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'rilcell_settings_v2',
   CASH: 'rilcell_cash_v2',
   PRESETS: 'rilcell_presets_v2',
+  CUSTOMERS: 'rilcell_customers_v2',
 };
 
 export function App() {
@@ -126,6 +131,26 @@ export function App() {
   // Selected Preset to auto-fill into transaction form
   const [selectedPresetToFill, setSelectedPresetToFill] = useState<QuickPresetProduct | null>(null);
 
+  // Customers Database State
+  const [customers, setCustomers] = useState<CustomerRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading customers:', e);
+    }
+    return INITIAL_CUSTOMERS;
+  });
+
+  const [selectedCustomerToFill, setSelectedCustomerToFill] = useState<{
+    customer: CustomerRecord;
+    category: ServiceCategory;
+    targetValue: string;
+  } | null>(null);
+
   // Modals State
   const [activeReceiptTrx, setActiveReceiptTrx] = useState<RilcellTransaction | null>(null);
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
@@ -158,6 +183,10 @@ export function App() {
     localStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(presets));
   }, [presets]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+  }, [customers]);
+
   // Master Preset CRUD Handlers
   const handleAddPreset = (newPresetData: Omit<QuickPresetProduct, 'id'>) => {
     const newPreset: QuickPresetProduct = {
@@ -179,6 +208,31 @@ export function App() {
 
   const handleResetPresets = () => {
     setPresets(QUICK_PRESETS);
+  };
+
+  // Customer CRUD Handlers
+  const handleAddCustomer = (newCustData: Omit<CustomerRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newCust: CustomerRecord = {
+      ...newCustData,
+      id: `cust-${Date.now()}`,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    setCustomers((prev) => [newCust, ...prev]);
+  };
+
+  const handleUpdateCustomer = (id: string, updatedFields: Partial<CustomerRecord>) => {
+    setCustomers((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updatedFields, updatedAt: Date.now() } : c))
+    );
+  };
+
+  const handleDeleteCustomer = (id: string) => {
+    setCustomers((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleResetCustomers = () => {
+    setCustomers(INITIAL_CUSTOMERS);
   };
 
   // Low Balance Accounts Alert Count
@@ -511,6 +565,7 @@ export function App() {
       settings,
       cashOnHand,
       presets,
+      customers,
     };
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
     const dlAnchor = document.createElement('a');
@@ -529,6 +584,7 @@ export function App() {
         if (data.settings) setSettings(data.settings);
         if (typeof data.cashOnHand === 'number') setCashOnHand(data.cashOnHand);
         if (Array.isArray(data.presets)) setPresets(data.presets);
+        if (Array.isArray(data.customers)) setCustomers(data.customers);
         return true;
       }
       return false;
@@ -545,6 +601,7 @@ export function App() {
     setSettings(INITIAL_SETTINGS);
     setCashOnHand(INITIAL_SETTINGS.cashOnHand);
     setPresets(QUICK_PRESETS);
+    setCustomers(INITIAL_CUSTOMERS);
   };
 
   return (
@@ -557,6 +614,7 @@ export function App() {
         accounts={accounts}
         lowBalanceCount={lowBalanceCount}
         presetsCount={presets.length}
+        customersCount={customers.length}
         onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
       />
 
@@ -573,8 +631,27 @@ export function App() {
               onOpenMasterProducts={() => setActiveTab('products')}
               selectedPresetToFill={selectedPresetToFill}
               onClearSelectedPreset={() => setSelectedPresetToFill(null)}
+              customers={customers}
+              selectedCustomerToFill={selectedCustomerToFill}
+              onClearSelectedCustomer={() => setSelectedCustomerToFill(null)}
+              onOpenCustomerManager={() => setActiveTab('customers')}
+              onQuickSaveCustomer={handleAddCustomer}
             />
           </div>
+        )}
+
+        {activeTab === 'customers' && (
+          <CustomerManager
+            customers={customers}
+            onAddCustomer={handleAddCustomer}
+            onUpdateCustomer={handleUpdateCustomer}
+            onDeleteCustomer={handleDeleteCustomer}
+            onResetCustomers={handleResetCustomers}
+            onSelectCustomerForTransaction={(customer, category, targetValue) => {
+              setSelectedCustomerToFill({ customer, category, targetValue });
+              setActiveTab('entry');
+            }}
+          />
         )}
 
         {activeTab === 'saldo' && (

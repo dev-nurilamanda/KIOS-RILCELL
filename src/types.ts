@@ -101,3 +101,55 @@ export interface QuickPresetProduct {
   productType?: 'digital' | 'fisik';
   stockQuantity?: number; // Jumlah stok fisik (Pcs)
 }
+
+// ==========================================
+// DATABASE PELANGGAN KONTER (Customer Database)
+// ==========================================
+
+export interface CustomerGameProfile {
+  id: string;
+  gameKey: 'mlbb' | 'ff' | 'pubgm' | 'genshin' | 'hok' | 'valorant' | 'roblox' | 'codm' | 'point_blank' | 'other';
+  gameName: string; // e.g. Mobile Legends, Free Fire, dll.
+  userId: string; // ID Akun / Player ID / User ID / UID
+  zoneId?: string; // Server / Zone ID (untuk MLBB misal 2041, Genshin misal Asia)
+  nickname?: string; // In-Game Name / IGN (opsional)
+}
+
+export interface CustomerEWalletProfile {
+  id: string;
+  walletType: 'DANA' | 'GoPay' | 'OVO' | 'ShopeePay' | 'LinkAja' | 'Lainnya';
+  phoneNumber: string; // Nomor HP terdaftar di e-wallet
+  accountHolder?: string; // Atas nama akun
+}
+
+export interface CustomerBankAccount {
+  id: string;
+  bankName: string; // BCA, BRI, Mandiri, BNI, BSI, Jago, SeaBank, dll.
+  accountNumber: string; // Nomor rekening
+  accountHolder?: string; // Atas nama pemilik rekening
+}
+
+export interface CustomerMeterProfile {
+  id: string;
+  meterNumber: string; // No Meteran / ID Pelanggan PLN (11-12 digit)
+  ownerName?: string; // Nama pemilik meteran / pelanggan PLN
+  tariffPower?: string; // e.g. R1M/900 VA, R1/1300 VA
+  locationNote?: string; // e.g. Rumah Utama, Kos, Toko
+}
+
+export interface CustomerRecord {
+  id: string;
+  name: string;
+  phone: string; // Nomor WhatsApp / HP utama
+  address?: string;
+  notes?: string;
+  
+  // Detail Layanan Pelanggan
+  ewallets: CustomerEWalletProfile[];
+  bankAccounts: CustomerBankAccount[];
+  meterNumbers: CustomerMeterProfile[];
+  gameProfiles: CustomerGameProfile[];
+  
+  createdAt: number;
+  updatedAt: number;
+}
