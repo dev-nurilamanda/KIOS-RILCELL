@@ -321,41 +321,43 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5 animate-in fade-in duration-200">
-      {/* Category Pills Switcher */}
-      <div className="bg-white rounded-2xl p-2.5 shadow-xs border border-slate-200 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1">
-          {CATEGORY_ITEMS.map((cat) => {
-            const isActive = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => handleCategoryChange(cat.id)}
-                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-150 ${
-                  isActive
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <span>{cat.icon}</span>
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+    <div className="max-w-4xl mx-auto space-y-4 pb-28 md:pb-20 animate-in fade-in duration-200">
+      {/* Category Pills Switcher - Floating & Sticky at Top under Navbar */}
+      <div className="sticky top-16 z-30 -mt-1 pt-1 pb-1.5 bg-slate-100/90 backdrop-blur-md transition-all">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2 sm:p-2.5 shadow-sm shadow-slate-900/5 border border-slate-200/90 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+            {CATEGORY_ITEMS.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                    isActive
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-[1.02]'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <span className="text-sm">{cat.icon}</span>
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        {onOpenMasterProducts && (
-          <button
-            type="button"
-            onClick={onOpenMasterProducts}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 rounded-xl text-xs font-bold transition shrink-0 border border-slate-200"
-            title="Kelola Master Produk & Preset"
-          >
-            <Package className="w-4 h-4 text-emerald-600" />
-            <span>Master Produk</span>
-          </button>
-        )}
+          {onOpenMasterProducts && (
+            <button
+              type="button"
+              onClick={onOpenMasterProducts}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 rounded-xl text-xs font-bold transition shrink-0 border border-slate-200 cursor-pointer"
+              title="Kelola Daftar Produk"
+            >
+              <Package className="w-4 h-4 text-emerald-600" />
+              <span>Daftar Produk</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Entry Form Card */}
@@ -785,38 +787,48 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
               </div>
             </div>
           )}
+        </form>
+      </div>
 
-          {/* Sticky Bottom Action Bar (Tidak tenggelam, langsung terlihat tanpa perlu scroll) */}
-          <div className="sticky bottom-16 md:bottom-2 z-30 pt-3 pb-1 -mx-2 px-2 sm:mx-0 sm:px-0">
-            <div className="bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-lg shadow-slate-900/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center justify-between sm:justify-start gap-4">
-                <div>
-                  <span className="text-[11px] text-slate-500 font-medium block">
-                    Total Pembayaran
-                  </span>
-                  <div className="text-lg sm:text-xl font-black text-slate-900">
-                    {numSell > 0 ? formatRupiah(numSell) : 'Rp 0'}
-                  </div>
-                </div>
-                {isBalanceInsufficient && (
-                  <span className="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
-                    Saldo modal tidak mencukupi
-                  </span>
-                )}
+      {/* Floating Fixed Bottom Bar for Simpan & Catat Transaksi (Mengambang & Tetap di Layar) */}
+      <div className="fixed bottom-[68px] md:bottom-4 left-0 right-0 z-35 px-3 sm:px-6 pointer-events-none transition-all">
+        <div className="max-w-4xl mx-auto pointer-events-auto">
+          <div className="bg-slate-900/95 text-white backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-slate-800 shadow-xl shadow-slate-950/25 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+              <div className="bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700/60 shrink-0">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-tight">
+                  Total Bayar
+                </span>
+                <span className="text-base sm:text-lg font-black text-emerald-400 leading-tight">
+                  {numSell > 0 ? formatRupiah(numSell) : 'Rp 0'}
+                </span>
               </div>
 
-              <button
-                id="btn-submit-quick-entry"
-                type="submit"
-                disabled={isBalanceInsufficient}
-                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-3.5 px-6 sm:px-8 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-md shadow-emerald-600/30 transition cursor-pointer"
-              >
-                <span>Simpan & Catat Transaksi</span>
-                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-              </button>
+              {isBalanceInsufficient ? (
+                <span className="text-[11px] font-bold text-rose-300 bg-rose-950/80 border border-rose-800/60 px-2.5 py-1 rounded-lg truncate">
+                  Saldo modal kurang!
+                </span>
+              ) : (
+                <div className="hidden sm:block text-xs text-slate-300 truncate font-medium">
+                  {isPhysical
+                    ? (serviceName ? `${serviceName} (${quantity} pcs)` : 'Voucher Fisik')
+                    : (targetNumber.trim() ? `No: ${targetNumber}` : 'Siap dicatat')}
+                </div>
+              )}
             </div>
+
+            <button
+              id="btn-submit-quick-entry"
+              form="quick-entry-form"
+              type="submit"
+              disabled={isBalanceInsufficient}
+              className="bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black py-2.5 sm:py-3 px-5 sm:px-7 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition cursor-pointer shrink-0"
+            >
+              <span>Simpan & Catat Transaksi</span>
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+            </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

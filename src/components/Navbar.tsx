@@ -62,7 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       badge: lowBalanceCount > 0 ? `${lowBalanceCount}!` : undefined,
       badgeAlert: lowBalanceCount > 0
     },
-    { id: 'products' as const, label: 'Master Produk', shortLabel: 'Produk', icon: Package },
+    { id: 'products' as const, label: 'Daftar Produk', shortLabel: 'Produk', icon: Package },
     { id: 'history' as const, label: 'Riwayat & Kas', shortLabel: 'Riwayat', icon: History },
     { id: 'analytics' as const, label: 'Statistik & Grafik', shortLabel: 'Statistik', icon: BarChart3 },
     { id: 'settings' as const, label: 'Pengaturan', shortLabel: 'Pengaturan', icon: Settings },
@@ -71,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   // Mobile Bottom Navigation only needs the 3 primary counter workflows (Saldo, Statistik, Pengaturan moved to Top Right)
   const mobileBottomNavItems = [
     { id: 'entry' as const, label: 'Transaksi Baru', shortLabel: 'Transaksi', icon: Zap },
-    { id: 'products' as const, label: 'Master Produk', shortLabel: 'Produk', icon: Package },
+    { id: 'products' as const, label: 'Daftar Produk', shortLabel: 'Produk', icon: Package },
     { id: 'history' as const, label: 'Riwayat & Kas', shortLabel: 'Riwayat', icon: History },
   ];
 

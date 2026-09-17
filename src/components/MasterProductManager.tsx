@@ -233,88 +233,91 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
   };
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-200">
-      {/* Header & Actions */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-            <Package className="w-5 h-5 text-emerald-600" />
-            <span>Master Produk & Preset Cepat</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-              {presets.length} Produk
-            </span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Daftar produk langganan konter dengan harga modal, harga jual, dan server saldo default untuk input transaksi otomatis.
-          </p>
-        </div>
+    <div className="space-y-4 animate-in fade-in duration-200">
+      {/* Unified Sticky Header: Pencarian + Reload & Tambah Produk + Navbar Kategori (Tidak terpengaruh scrolling) */}
+      <div className="sticky top-16 z-30 -mt-1 pt-1 pb-2 bg-slate-100/95 backdrop-blur-md">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-sm shadow-slate-900/5 space-y-2.5">
+          {/* Top Row: Opsi Pencarian + Tombol Reload + Tombol Tambah Produk Baru (Tunggal & Rapi) */}
+          <div className="flex items-center gap-2">
+            {/* Opsi Pencarian */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari nama produk, provider, atau server..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-8 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  title="Hapus pencarian"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm('Kembalikan daftar produk ke preset bawaan standar RILCELL?')) {
-                onResetPresets();
-              }
-            }}
-            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
-            title="Kembalikan ke data bawaan"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">Reset Bawaan</span>
-          </button>
-
-          <button
-            type="button"
-            id="btn-add-master-product"
-            onClick={openAddModal}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Tambah Produk Baru</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Filter & Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Cari nama produk, provider, atau server saldo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3.5 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-          />
-        </div>
-
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto no-scrollbar shrink-0 max-w-full">
-          {[
-            { id: 'all', label: 'Semua' },
-            { id: 'pulsa_data', label: 'Pulsa & Data' },
-            { id: 'voucher_fisik', label: 'Voucher Fisik' },
-            { id: 'kartu_perdana', label: 'Perdana' },
-            { id: 'pln_tagihan', label: 'PLN' },
-            { id: 'topup_ewallet', label: 'E-Wallet' },
-            { id: 'transfer_tarik', label: 'Transfer' },
-            { id: 'game_tv', label: 'Game' },
-            { id: 'aksesori_lainnya', label: 'Aksesori' },
-          ].map((cat) => (
+            {/* Tombol Reload Data */}
             <button
-              key={cat.id}
-              onClick={() => setFilterCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-                filterCategory === cat.id
-                  ? 'bg-white text-emerald-800 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
+              type="button"
+              onClick={() => {
+                if (confirm('Kembalikan / Reload daftar produk ke data bawaan standar?')) {
+                  onResetPresets();
+                }
+              }}
+              className="p-2 sm:px-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200/70 shrink-0 cursor-pointer"
+              title="Reload data bawaan"
             >
-              {cat.label}
+              <RotateCcw className="w-3.5 h-3.5 text-slate-600" />
+              <span className="hidden sm:inline">Reload</span>
             </button>
-          ))}
+
+            {/* Tombol Tambah Produk Baru */}
+            <button
+              type="button"
+              id="btn-add-master-product"
+              onClick={openAddModal}
+              className="px-3.5 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span className="hidden xs:inline">Tambah Produk Baru</span>
+              <span className="xs:hidden">Tambah</span>
+            </button>
+          </div>
+
+          {/* Bottom Row: Navbar Kategori (Scrollable & Tetap di Atas) */}
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-0.5">
+            {[
+              { id: 'all', label: 'Semua Produk' },
+              { id: 'pulsa_data', label: 'Pulsa & Data' },
+              { id: 'voucher_fisik', label: 'Voucher Fisik' },
+              { id: 'kartu_perdana', label: 'Perdana' },
+              { id: 'pln_tagihan', label: 'PLN' },
+              { id: 'topup_ewallet', label: 'E-Wallet' },
+              { id: 'transfer_tarik', label: 'Transfer' },
+              { id: 'game_tv', label: 'Game' },
+              { id: 'aksesori_lainnya', label: 'Aksesori' },
+            ].map((cat) => {
+              const isActive = filterCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setFilterCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -438,7 +441,7 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-emerald-400" />
                 <h3 className="font-bold text-sm">
-                  {editingPreset ? 'Edit Master Produk' : 'Tambah Master Produk Baru'}
+                  {editingPreset ? 'Edit Produk' : 'Tambah Produk Baru'}
                 </h3>
               </div>
               <button
