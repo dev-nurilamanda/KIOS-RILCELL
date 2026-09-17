@@ -126,6 +126,12 @@ export const RilcellReceiptModal: React.FC<RilcellReceiptModalProps> = ({
                   {transaction.status}
                 </span>
               </div>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-400">Metode Bayar:</span>
+                <span className="font-bold text-slate-900 uppercase">
+                  {(transaction.paymentMethod || 'tunai')}
+                </span>
+              </div>
             </div>
 
             {/* Total */}

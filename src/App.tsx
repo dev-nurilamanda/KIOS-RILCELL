@@ -231,12 +231,13 @@ export function App() {
       });
       setAccounts(updatedAccounts);
     } else {
-      // Physical product: deduct 1 pcs from preset stock
+      // Physical product: deduct quantity pcs from preset stock
+      const qty = trxData.quantity || 1;
       if (trxData.presetId) {
         setPresets((prev) =>
           prev.map((p) =>
             p.id === trxData.presetId
-              ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - 1) }
+              ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - qty) }
               : p
           )
         );
@@ -244,15 +245,44 @@ export function App() {
         setPresets((prev) =>
           prev.map((p) =>
             p.name.toLowerCase() === trxData.serviceName.toLowerCase() && p.productType === 'fisik'
-              ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - 1) }
+              ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - qty) }
               : p
           )
         );
       }
     }
 
-    // Add selling price to cash on hand
-    setCashOnHand((prev) => prev + trxData.sellingPrice);
+    // Add selling price to the selected payment method's destination balance / cash on hand
+    if (!trxData.paymentMethod || trxData.paymentMethod === 'tunai') {
+      setCashOnHand((prev) => prev + trxData.sellingPrice);
+    } else {
+      // Find destination account explicitly chosen or fallback
+      let destAccount = trxData.destinationAccountId
+        ? updatedAccounts.find((a) => a.id === trxData.destinationAccountId)
+        : null;
+
+      if (!destAccount) {
+        if (trxData.paymentMethod === 'qris') {
+          destAccount = updatedAccounts.find(
+            (a) => a.category === 'merchant' || a.id.toLowerCase().includes('qris') || a.id === 'gopay_merchant'
+          ) || updatedAccounts.find((a) => a.category === 'ewallet');
+        } else if (trxData.paymentMethod === 'transfer') {
+          destAccount = updatedAccounts.find((a) => a.category === 'bank') || 
+            updatedAccounts.find((a) => a.category === 'ewallet') || 
+            updatedAccounts[0];
+        }
+      }
+
+      if (destAccount) {
+        updatedAccounts = updatedAccounts.map((acc) =>
+          acc.id === destAccount!.id
+            ? { ...acc, balance: acc.balance + trxData.sellingPrice, updatedAt: Date.now() }
+            : acc
+        );
+        setAccounts(updatedAccounts);
+      }
+    }
+
     setTransactions((prev) => [newTransaction, ...prev]);
 
     // Open receipt modal right away for cashier convenience
@@ -292,18 +322,49 @@ export function App() {
           })
         );
       } else {
-        // Revert physical stock: return 1 pcs to preset stock
+        // Revert physical stock: return qty pcs to preset stock
+        const qty = target.quantity || 1;
         if (target.presetId) {
           setPresets((prev) =>
             prev.map((p) =>
               p.id === target.presetId
-                ? { ...p, stockQuantity: (p.stockQuantity ?? 0) + 1 }
+                ? { ...p, stockQuantity: (p.stockQuantity ?? 0) + qty }
                 : p
             )
           );
         }
       }
-      setCashOnHand((prev) => Math.max(0, prev - target.sellingPrice));
+      // Revert received selling price from the chosen payment method
+      if (!target.paymentMethod || target.paymentMethod === 'tunai') {
+        setCashOnHand((prev) => Math.max(0, prev - target.sellingPrice));
+      } else {
+        const destId = target.destinationAccountId;
+        if (destId) {
+          setAccounts((prev) =>
+            prev.map((acc) =>
+              acc.id === destId
+                ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
+                : acc
+            )
+          );
+        } else if (target.paymentMethod === 'qris') {
+          setAccounts((prev) =>
+            prev.map((acc) =>
+              acc.category === 'merchant' || acc.id.toLowerCase().includes('qris') || acc.id === 'gopay_merchant'
+                ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
+                : acc
+            )
+          );
+        } else if (target.paymentMethod === 'transfer') {
+          setAccounts((prev) =>
+            prev.map((acc) =>
+              acc.category === 'bank' || acc.category === 'ewallet'
+                ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
+                : acc
+            )
+          );
+        }
+      }
     } else {
       if (!isPhysical) {
         // Re-apply: deduct costPrice from modal account
@@ -320,18 +381,49 @@ export function App() {
           })
         );
       } else {
-        // Deduct 1 pcs stock
+        // Deduct qty pcs stock
+        const qty = target.quantity || 1;
         if (target.presetId) {
           setPresets((prev) =>
             prev.map((p) =>
               p.id === target.presetId
-                ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - 1) }
+                ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - qty) }
                 : p
             )
           );
         }
       }
-      setCashOnHand((prev) => prev + target.sellingPrice);
+      // Re-add received selling price to the chosen payment method
+      if (!target.paymentMethod || target.paymentMethod === 'tunai') {
+        setCashOnHand((prev) => prev + target.sellingPrice);
+      } else {
+        const destId = target.destinationAccountId;
+        if (destId) {
+          setAccounts((prev) =>
+            prev.map((acc) =>
+              acc.id === destId
+                ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
+                : acc
+            )
+          );
+        } else if (target.paymentMethod === 'qris') {
+          setAccounts((prev) =>
+            prev.map((acc) =>
+              acc.category === 'merchant' || acc.id.toLowerCase().includes('qris') || acc.id === 'gopay_merchant'
+                ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
+                : acc
+            )
+          );
+        } else if (target.paymentMethod === 'transfer') {
+          setAccounts((prev) =>
+            prev.map((acc) =>
+              acc.category === 'bank' || acc.category === 'ewallet'
+                ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
+                : acc
+            )
+          );
+        }
+      }
     }
 
     setTransactions((prev) =>
@@ -475,6 +567,7 @@ export function App() {
             <QuickEntryForm
               accounts={accounts}
               presets={presets}
+              cashOnHand={cashOnHand}
               onSubmitTransaction={handleCreateTransaction}
               onSelectTransactionReceipt={(trx) => setActiveReceiptTrx(trx)}
               onOpenMasterProducts={() => setActiveTab('products')}

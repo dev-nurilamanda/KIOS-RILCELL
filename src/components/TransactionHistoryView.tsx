@@ -168,6 +168,21 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
     return acc ? acc.name : accId.toUpperCase();
   };
 
+  const getPaymentDestinationLabel = (trx: RilcellTransaction) => {
+    if (!trx.paymentMethod || trx.paymentMethod === 'tunai') {
+      return 'Tunai (Kas Laci)';
+    }
+    if (trx.paymentMethod === 'qris') {
+      const accName = trx.destinationAccountId ? getAccountName(trx.destinationAccountId) : 'QRIS';
+      return `QRIS • ${accName}`;
+    }
+    if (trx.paymentMethod === 'transfer') {
+      const accName = trx.destinationAccountId ? getAccountName(trx.destinationAccountId) : 'Bank';
+      return `Transfer • ${accName}`;
+    }
+    return trx.paymentMethod;
+  };
+
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
       {/* Top Filter & Search Bar */}
@@ -343,8 +358,11 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
                       {formatRupiah(trx.costPrice)}
                     </td>
 
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">
-                      {formatRupiah(trx.sellingPrice)}
+                    <td className="py-3 px-4 text-right">
+                      <div className="font-bold text-slate-900">{formatRupiah(trx.sellingPrice)}</div>
+                      <div className="text-[10px] text-slate-500 font-medium">
+                        {getPaymentDestinationLabel(trx)}
+                      </div>
                     </td>
 
                     <td className="py-3 px-4 text-right font-black text-emerald-600">
@@ -429,6 +447,9 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
 
                   <div className="text-right">
                     <div className="font-bold text-sm text-slate-900">{formatRupiah(trx.sellingPrice)}</div>
+                    <div className="text-[10px] text-slate-500 font-medium">
+                      {getPaymentDestinationLabel(trx)}
+                    </div>
                     <div className="text-[11px] font-bold text-emerald-600">
                       Untung: +{formatRupiah(trx.profit)}
                     </div>

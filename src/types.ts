@@ -58,6 +58,9 @@ export interface RilcellTransaction {
   syncedToSheets?: boolean;
   productType?: 'digital' | 'fisik';
   presetId?: string;
+  paymentMethod?: 'tunai' | 'qris' | 'transfer';
+  destinationAccountId?: AccountKey;
+  quantity?: number;
 }
 
 export interface BalanceTransfer {

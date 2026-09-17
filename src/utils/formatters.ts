@@ -99,6 +99,7 @@ Tujuan    : *${trx.targetNumber}*
 ${trx.provider ? `Provider  : ${trx.provider}\n` : ''}${trx.snRefNumber ? `No. Seri  : *${trx.snRefNumber}*\n` : ''}Status    : *${statusStr}*
 ${line}
 Total Bayar: *${formatRupiah(trx.sellingPrice)}*
+Metode     : *${(trx.paymentMethod || 'tunai').toUpperCase()}*
 ${line}
 ${settings.receiptFooter}
 `;
