@@ -23,7 +23,6 @@ import { MasterProductManager } from './components/MasterProductManager';
 import { RilcellReceiptModal } from './components/RilcellReceiptModal';
 import { InstallGuideModal } from './components/InstallGuideModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
-import { QuickOverviewSidebar } from './components/QuickOverviewSidebar';
 import { TransferModal } from './components/TransferModal';
 import { generateInvoiceNumber } from './utils/formatters';
 import { sendTransactionToGoogleSheets } from './services/googleSheetsService';
@@ -470,33 +469,18 @@ export function App() {
       />
 
       {/* Main Content Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-6 pb-24 md:pb-8">
         {activeTab === 'entry' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Kolom Kiri: Formulir Transaksi Baru (Quick Entry Form) */}
-            <div className="lg:col-span-7 xl:col-span-8">
-              <QuickEntryForm
-                accounts={accounts}
-                presets={presets}
-                onSubmitTransaction={handleCreateTransaction}
-                onSelectTransactionReceipt={(trx) => setActiveReceiptTrx(trx)}
-                onOpenMasterProducts={() => setActiveTab('products')}
-                selectedPresetToFill={selectedPresetToFill}
-                onClearSelectedPreset={() => setSelectedPresetToFill(null)}
-              />
-            </div>
-
-            {/* Kolom Kanan: Aktivitas Kasir, Transaksi Terakhir & Cetak Struk (Informasi Saldo Terpusat di Menu Saldo) */}
-            <div className="lg:col-span-5 xl:col-span-4">
-              <QuickOverviewSidebar
-                accounts={accounts}
-                recentTransactions={transactions}
-                onOpenTransferModal={() => setIsTransferModalOpen(true)}
-                onSelectTransactionReceipt={(trx) => setActiveReceiptTrx(trx)}
-                onViewAllSaldo={() => setActiveTab('saldo')}
-                onViewAllHistory={() => setActiveTab('history')}
-              />
-            </div>
+          <div className="w-full max-w-4xl mx-auto">
+            <QuickEntryForm
+              accounts={accounts}
+              presets={presets}
+              onSubmitTransaction={handleCreateTransaction}
+              onSelectTransactionReceipt={(trx) => setActiveReceiptTrx(trx)}
+              onOpenMasterProducts={() => setActiveTab('products')}
+              selectedPresetToFill={selectedPresetToFill}
+              onClearSelectedPreset={() => setSelectedPresetToFill(null)}
+            />
           </div>
         )}
 
