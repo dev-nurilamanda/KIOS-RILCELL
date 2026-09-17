@@ -385,7 +385,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-40 md:pb-24 animate-in fade-in duration-200">
+    <div className="max-w-4xl mx-auto space-y-4 pb-52 md:pb-24 animate-in fade-in duration-200">
       {/* Category Pills Switcher - Floating & Sticky at Top under Navbar */}
       <div className="sticky top-[70px] z-30 -mt-1 pt-1.5 pb-2 bg-slate-100/95 backdrop-blur-md transition-all">
         <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-md shadow-slate-900/5 border border-slate-200/90 flex items-center justify-between gap-2.5 sm:gap-3">
@@ -995,9 +995,9 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
       />
 
       {/* Floating Capsule Bottom Bar for Simpan & Catat Transaksi (Bentuk Kapsul Mengambang & Bebas Scrolling) */}
-      <div className="fixed bottom-[88px] md:bottom-6 left-0 right-0 z-35 px-3 sm:px-6 pointer-events-none transition-all">
-        <div className="max-w-3xl mx-auto pointer-events-auto">
-          <div className="bg-slate-950/95 text-white backdrop-blur-lg p-2 sm:p-2.5 sm:px-4 rounded-full border border-slate-700/80 shadow-2xl shadow-slate-950/40 flex items-center justify-between gap-2.5 sm:gap-4 ring-1 ring-white/10">
+      <div className="fixed bottom-[104px] sm:bottom-[110px] md:bottom-6 left-0 right-0 z-35 px-3.5 sm:px-6 pointer-events-none transition-all">
+        <div className="max-w-2xl mx-auto pointer-events-auto">
+          <div className="bg-slate-950/95 text-white backdrop-blur-xl p-2 sm:p-2.5 sm:px-4 rounded-full border border-slate-700 shadow-[0_12px_36px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2.5 sm:gap-4 ring-1 ring-white/20">
             {/* Total Bayar Info Pill */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <div className="bg-slate-900/90 pl-3.5 pr-4 py-1.5 sm:py-2 rounded-full border border-slate-800 flex items-center gap-2.5 shrink-0">
@@ -1028,7 +1028,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
               form="quick-entry-form"
               type="submit"
               disabled={isBalanceInsufficient}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black py-2.5 sm:py-3 px-4.5 sm:px-7 rounded-full text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all duration-150 cursor-pointer shrink-0"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black py-2.5 sm:py-3 px-4.5 sm:px-7 rounded-full text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all duration-150 cursor-pointer shrink-0"
             >
               <span>Simpan & Catat Transaksi</span>
               <ArrowRight className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" />
