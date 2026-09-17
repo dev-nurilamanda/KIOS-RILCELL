@@ -29,6 +29,9 @@ import { RilcellReceiptModal } from './components/RilcellReceiptModal';
 import { InstallGuideModal } from './components/InstallGuideModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { TransferModal } from './components/TransferModal';
+import { WhatsNewModal } from './components/WhatsNewModal';
+import { UpdateNotificationBanner } from './components/UpdateNotificationBanner';
+import { isNewVersionAvailable } from './utils/version';
 import { generateInvoiceNumber } from './utils/formatters';
 import { sendTransactionToGoogleSheets } from './services/googleSheetsService';
 import { 
@@ -169,6 +172,17 @@ export function App() {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isEditCashModalOpen, setIsEditCashModalOpen] = useState(false);
   const [tempCashInput, setTempCashInput] = useState('');
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
+
+  // Check for new app version updates
+  useEffect(() => {
+    if (isNewVersionAvailable()) {
+      const timer = setTimeout(() => {
+        setIsWhatsNewOpen(true);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Firebase Cloud Synchronization
   const [isCloudSynced, setIsCloudSynced] = useState(false);
@@ -958,6 +972,16 @@ export function App() {
         isOpen={isInstallGuideOpen}
         onClose={() => setIsInstallGuideOpen(false)}
       />
+
+      {/* What's New & Release Changelog Modal */}
+      <WhatsNewModal
+        isOpen={isWhatsNewOpen}
+        onClose={() => setIsWhatsNewOpen(false)}
+        isAutoPrompt={true}
+      />
+
+      {/* Background Service Worker Update Banner */}
+      <UpdateNotificationBanner />
 
       {/* Offline Status Pill */}
       <OfflineIndicator />

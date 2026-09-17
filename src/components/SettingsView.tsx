@@ -49,6 +49,7 @@ import {
   syncCustomersToCloud
 } from '../services/firebase';
 import { APP_VERSION_INFO, checkPWAUpdate } from '../utils/version';
+import { WhatsNewModal } from './WhatsNewModal';
 import { formatRupiah } from '../utils/formatters';
 
 interface SettingsViewProps {
@@ -1491,93 +1492,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       )}
 
       {/* Catatan Rilis & Changelog Modal */}
-      {showChangelogModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setShowChangelogModal(false)}
-        >
-          <div 
-            id="changelog-modal"
-            className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 space-y-5 animate-in zoom-in-95 duration-200 select-none max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-2xs">
-                  <History className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-slate-900">Catatan Pembaruan RILCELL</h3>
-                  <p className="text-xs text-slate-500">Riwayat versi dan fitur aplikasi</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowChangelogModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
-                title="Tutup"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Content Body */}
-            <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-              {/* Version Header Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-200/80">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-extrabold text-emerald-950">Versi {APP_VERSION_INFO.version}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">Terbaru</span>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {APP_VERSION_INFO.buildDate}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 mt-2">
-                  Daftar fitur dan peningkatan pada versi ini:
-                </p>
-                <ul className="mt-2.5 space-y-2">
-                  {APP_VERSION_INFO.releaseNotes.map((note, idx) => (
-                    <li key={idx} className="text-xs text-slate-700 flex items-start gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>{note}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Edukasi WebAPK Android */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-slate-600">
-                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <Smartphone className="w-4 h-4 text-slate-700" />
-                  <span>Tentang Pembaruan WebAPK di Android:</span>
-                </h4>
-                <p className="text-[11px] leading-relaxed text-slate-600">
-                  Saat diinstal melalui Google Chrome di Android (Xiaomi/MIUI, Samsung, Oppo, dll), sistem Android membuat paket bernama <strong className="text-slate-800 font-semibold font-mono">WebAPK</strong> (seperti <span className="font-mono text-[10px] bg-slate-200 px-1 py-0.5 rounded">org.chromium.webapk...</span>).
-                </p>
-                <p className="text-[11px] leading-relaxed text-slate-600">
-                  Secara berkala, Google Chrome di HP Anda akan memperbarui versi WebAPK di sistem Android secara otomatis di latar belakang saat Anda terhubung ke internet.
-                </p>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
-              <span className="text-[11px] text-slate-400">RILCELL POS • v{APP_VERSION_INFO.version}</span>
-              <button
-                type="button"
-                onClick={() => setShowChangelogModal(false)}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition cursor-pointer"
-              >
-                Tutup Catatan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <WhatsNewModal
+        isOpen={showChangelogModal}
+        onClose={() => setShowChangelogModal(false)}
+      />
     </div>
   );
 };
