@@ -28,10 +28,18 @@ import {
   CheckSquare,
   Square,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Cloud
 } from 'lucide-react';
 import { RilcellSettings, ModalAccount, RilcellTransaction, AppTheme, ClearDemoOptions } from '../types';
 import { GOOGLE_APPS_SCRIPT_TEMPLATE, syncAccountsToGoogleSheets, fetchFromGoogleSheets } from '../services/googleSheetsService';
+import { 
+  syncAllTransactionsToCloud, 
+  syncAccountsToCloud, 
+  syncSettingsAndCashToCloud,
+  syncPresetsToCloud,
+  syncCustomersToCloud
+} from '../services/firebase';
 import { formatRupiah } from '../utils/formatters';
 
 interface SettingsViewProps {
@@ -86,6 +94,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [showScriptModal, setShowScriptModal] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
+  const [cloudSyncToast, setCloudSyncToast] = useState<string | null>(null);
+
+  const handleManualCloudSync = async () => {
+    setIsCloudSyncing(true);
+    setCloudSyncToast(null);
+    try {
+      await Promise.all([
+        syncAllTransactionsToCloud(transactions),
+        syncAccountsToCloud(accounts),
+        syncSettingsAndCashToCloud(formData, cashOnHand),
+      ]);
+      setCloudSyncToast('✅ Seluruh data transaksi, akun saldo, & kas berhasil disinkronkan ke Google Firebase Cloud!');
+      setTimeout(() => setCloudSyncToast(null), 5000);
+    } catch (e) {
+      setCloudSyncToast('❌ Gagal sinkronisasi ke Firebase Cloud');
+      setTimeout(() => setCloudSyncToast(null), 4000);
+    } finally {
+      setIsCloudSyncing(false);
+    }
+  };
 
   // Keep form data in sync if parent settings change
   useEffect(() => {
@@ -177,6 +206,62 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <span>Pengaturan RILCELL berhasil disimpan!</span>
         </div>
       )}
+
+      {/* Google Firebase Cloud Firestore Integration Card */}
+      <div className="bg-gradient-to-br from-teal-950 via-slate-900 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-md border border-teal-800/40 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/30">
+              <Cloud className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <span>Database Online Google Firebase (Firestore)</span>
+                </h3>
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Terhubung & Realtime
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Semua transaksi, 8 akun saldo, kas laci, dan data pelanggan otomatis tersimpan permanen di Cloud Firestore & tersinkron multi-perangkat.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={isCloudSyncing}
+            onClick={handleManualCloudSync}
+            className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shrink-0 shadow-xs"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isCloudSyncing ? 'animate-spin' : ''}`} />
+            <span>{isCloudSyncing ? 'Menyinkronkan...' : 'Sinkronkan Ulang ke Cloud'}</span>
+          </button>
+        </div>
+
+        {cloudSyncToast && (
+          <div className="text-xs p-3 rounded-xl bg-teal-900/60 border border-teal-700/50 text-teal-200 flex items-center gap-2">
+            <span>{cloudSyncToast}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-teal-900/50 text-xs">
+          <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
+            <span className="text-[10px] text-slate-400 block font-medium">Status Koneksi</span>
+            <span className="text-xs font-bold text-emerald-400">Aktif & Offline-First</span>
+          </div>
+          <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
+            <span className="text-[10px] text-slate-400 block font-medium">Model Penyimpanan</span>
+            <span className="text-xs font-bold text-teal-300">Firestore Cloud DB</span>
+          </div>
+          <div className="col-span-2 sm:col-span-1 bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
+            <span className="text-[10px] text-slate-400 block font-medium">Multi-Kasir</span>
+            <span className="text-xs font-bold text-white">Sinkron Otomatis</span>
+          </div>
+        </div>
+      </div>
 
       {/* Google Sheets Database Integration Card */}
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-md border border-slate-700 space-y-4">

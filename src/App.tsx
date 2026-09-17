@@ -31,6 +31,17 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { TransferModal } from './components/TransferModal';
 import { generateInvoiceNumber } from './utils/formatters';
 import { sendTransactionToGoogleSheets } from './services/googleSheetsService';
+import { 
+  syncTransactionToCloud,
+  syncAllTransactionsToCloud,
+  deleteTransactionFromCloud,
+  syncAccountsToCloud,
+  syncTransferToCloud,
+  syncPresetsToCloud,
+  syncCustomersToCloud,
+  syncSettingsAndCashToCloud,
+  fetchAllFromCloud
+} from './services/firebase';
 
 const STORAGE_KEYS = {
   ACCOUNTS: 'rilcell_accounts_v2',
@@ -159,10 +170,56 @@ export function App() {
   const [isEditCashModalOpen, setIsEditCashModalOpen] = useState(false);
   const [tempCashInput, setTempCashInput] = useState('');
 
-  // Persistence
+  // Firebase Cloud Synchronization
+  const [isCloudSynced, setIsCloudSynced] = useState(false);
+
+  // Sync from Firestore on initial mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(accounts));
-  }, [accounts]);
+    let isMounted = true;
+    fetchAllFromCloud().then((cloudData) => {
+      if (!isMounted || !cloudData) return;
+      setIsCloudSynced(true);
+
+      if (cloudData.transactions && cloudData.transactions.length > 0) {
+        setTransactions(cloudData.transactions);
+      } else if (transactions.length > 0) {
+        syncAllTransactionsToCloud(transactions);
+      }
+
+      if (cloudData.accounts && cloudData.accounts.length > 0) {
+        setAccounts(cloudData.accounts);
+      } else if (accounts.length > 0) {
+        syncAccountsToCloud(accounts);
+      }
+
+      if (cloudData.transfers && cloudData.transfers.length > 0) {
+        setTransferHistory(cloudData.transfers);
+      }
+
+      if (cloudData.presets && cloudData.presets.length > 0) {
+        setPresets(cloudData.presets);
+      } else if (presets.length > 0) {
+        syncPresetsToCloud(presets);
+      }
+
+      if (cloudData.customers && cloudData.customers.length > 0) {
+        setCustomers(cloudData.customers);
+      } else if (customers.length > 0) {
+        syncCustomersToCloud(customers);
+      }
+
+      if (cloudData.settings) {
+        setSettings((prev) => ({ ...prev, ...cloudData.settings }));
+      }
+      if (typeof cloudData.cashOnHand === 'number') {
+        setCashOnHand(cloudData.cashOnHand);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
@@ -233,27 +290,38 @@ export function App() {
     }
   }, [settings.theme]);
 
-  // Master Preset CRUD Handlers
+    // Master Preset CRUD Handlers
   const handleAddPreset = (newPresetData: Omit<QuickPresetProduct, 'id'>) => {
     const newPreset: QuickPresetProduct = {
       ...newPresetData,
       id: `qp-${Date.now()}`,
     };
-    setPresets((prev) => [newPreset, ...prev]);
+    setPresets((prev) => {
+      const updated = [newPreset, ...prev];
+      syncPresetsToCloud(updated);
+      return updated;
+    });
   };
 
   const handleUpdatePreset = (id: string, updatedFields: Partial<QuickPresetProduct>) => {
-    setPresets((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...updatedFields } : item))
-    );
+    setPresets((prev) => {
+      const updated = prev.map((item) => (item.id === id ? { ...item, ...updatedFields } : item));
+      syncPresetsToCloud(updated);
+      return updated;
+    });
   };
 
   const handleDeletePreset = (id: string) => {
-    setPresets((prev) => prev.filter((item) => item.id !== id));
+    setPresets((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      syncPresetsToCloud(updated);
+      return updated;
+    });
   };
 
   const handleResetPresets = () => {
     setPresets(QUICK_PRESETS);
+    syncPresetsToCloud(QUICK_PRESETS);
   };
 
   // Customer CRUD Handlers
@@ -264,21 +332,32 @@ export function App() {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    setCustomers((prev) => [newCust, ...prev]);
+    setCustomers((prev) => {
+      const updated = [newCust, ...prev];
+      syncCustomersToCloud(updated);
+      return updated;
+    });
   };
 
   const handleUpdateCustomer = (id: string, updatedFields: Partial<CustomerRecord>) => {
-    setCustomers((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updatedFields, updatedAt: Date.now() } : c))
-    );
+    setCustomers((prev) => {
+      const updated = prev.map((c) => (c.id === id ? { ...c, ...updatedFields, updatedAt: Date.now() } : c));
+      syncCustomersToCloud(updated);
+      return updated;
+    });
   };
 
   const handleDeleteCustomer = (id: string) => {
-    setCustomers((prev) => prev.filter((c) => c.id !== id));
+    setCustomers((prev) => {
+      const updated = prev.filter((c) => c.id !== id);
+      syncCustomersToCloud(updated);
+      return updated;
+    });
   };
 
   const handleResetCustomers = () => {
     setCustomers(INITIAL_CUSTOMERS);
+    syncCustomersToCloud(INITIAL_CUSTOMERS);
   };
 
   // Low Balance Accounts Alert Count
@@ -352,9 +431,10 @@ export function App() {
       }
     }
 
-    // Add selling price to the selected payment method's destination balance / cash on hand
+    let finalCashOnHand = cashOnHand;
     if (!trxData.paymentMethod || trxData.paymentMethod === 'tunai') {
-      setCashOnHand((prev) => prev + trxData.sellingPrice);
+      finalCashOnHand = cashOnHand + trxData.sellingPrice;
+      setCashOnHand(finalCashOnHand);
     } else {
       // Find destination account explicitly chosen or fallback
       let destAccount = trxData.destinationAccountId
@@ -385,6 +465,11 @@ export function App() {
 
     setTransactions((prev) => [newTransaction, ...prev]);
 
+    // Sync to Firebase Cloud Firestore
+    syncTransactionToCloud(newTransaction);
+    syncAccountsToCloud(updatedAccounts);
+    syncSettingsAndCashToCloud(settings, finalCashOnHand);
+
     // Open receipt modal right away for cashier convenience
     setActiveReceiptTrx(newTransaction);
 
@@ -405,130 +490,136 @@ export function App() {
 
     const newStatus = target.status === 'sukses' ? 'gagal' : 'sukses';
     const isPhysical = target.productType === 'fisik' || target.sourceAccountId === 'stok_fisik';
+    let updatedAccs = [...accounts];
+    let updatedCash = cashOnHand;
 
     if (newStatus === 'gagal') {
       if (!isPhysical) {
         // Revert: refund costPrice back to modal account
-        setAccounts((prev) =>
-          prev.map((acc) => {
-            if (acc.id === target.sourceAccountId) {
-              return {
-                ...acc,
-                balance: acc.balance + target.costPrice,
-                updatedAt: Date.now(),
-              };
-            }
-            return acc;
-          })
-        );
+        updatedAccs = updatedAccs.map((acc) => {
+          if (acc.id === target.sourceAccountId) {
+            return {
+              ...acc,
+              balance: acc.balance + target.costPrice,
+              updatedAt: Date.now(),
+            };
+          }
+          return acc;
+        });
+        setAccounts(updatedAccs);
       } else {
         // Revert physical stock: return qty pcs to preset stock
         const qty = target.quantity || 1;
         if (target.presetId) {
-          setPresets((prev) =>
-            prev.map((p) =>
+          setPresets((prev) => {
+            const updated = prev.map((p) =>
               p.id === target.presetId
                 ? { ...p, stockQuantity: (p.stockQuantity ?? 0) + qty }
                 : p
-            )
-          );
+            );
+            syncPresetsToCloud(updated);
+            return updated;
+          });
         }
       }
       // Revert received selling price from the chosen payment method
       if (!target.paymentMethod || target.paymentMethod === 'tunai') {
-        setCashOnHand((prev) => Math.max(0, prev - target.sellingPrice));
+        updatedCash = Math.max(0, cashOnHand - target.sellingPrice);
+        setCashOnHand(updatedCash);
       } else {
         const destId = target.destinationAccountId;
         if (destId) {
-          setAccounts((prev) =>
-            prev.map((acc) =>
-              acc.id === destId
-                ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
-                : acc
-            )
+          updatedAccs = updatedAccs.map((acc) =>
+            acc.id === destId
+              ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
+              : acc
           );
+          setAccounts(updatedAccs);
         } else if (target.paymentMethod === 'qris') {
-          setAccounts((prev) =>
-            prev.map((acc) =>
-              acc.category === 'merchant' || acc.id.toLowerCase().includes('qris') || acc.id === 'gopay_merchant'
-                ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
-                : acc
-            )
+          updatedAccs = updatedAccs.map((acc) =>
+            acc.category === 'merchant' || acc.id.toLowerCase().includes('qris') || acc.id === 'gopay_merchant'
+              ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
+              : acc
           );
+          setAccounts(updatedAccs);
         } else if (target.paymentMethod === 'transfer') {
-          setAccounts((prev) =>
-            prev.map((acc) =>
-              acc.category === 'bank' || acc.category === 'ewallet'
-                ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
-                : acc
-            )
+          updatedAccs = updatedAccs.map((acc) =>
+            acc.category === 'bank' || acc.category === 'ewallet'
+              ? { ...acc, balance: Math.max(0, acc.balance - target.sellingPrice), updatedAt: Date.now() }
+              : acc
           );
+          setAccounts(updatedAccs);
         }
       }
     } else {
       if (!isPhysical) {
         // Re-apply: deduct costPrice from modal account
-        setAccounts((prev) =>
-          prev.map((acc) => {
-            if (acc.id === target.sourceAccountId) {
-              return {
-                ...acc,
-                balance: Math.max(0, acc.balance - target.costPrice),
-                updatedAt: Date.now(),
-              };
-            }
-            return acc;
-          })
-        );
+        updatedAccs = updatedAccs.map((acc) => {
+          if (acc.id === target.sourceAccountId) {
+            return {
+              ...acc,
+              balance: Math.max(0, acc.balance - target.costPrice),
+              updatedAt: Date.now(),
+            };
+          }
+          return acc;
+        });
+        setAccounts(updatedAccs);
       } else {
         // Deduct qty pcs stock
         const qty = target.quantity || 1;
         if (target.presetId) {
-          setPresets((prev) =>
-            prev.map((p) =>
+          setPresets((prev) => {
+            const updated = prev.map((p) =>
               p.id === target.presetId
                 ? { ...p, stockQuantity: Math.max(0, (p.stockQuantity ?? 1) - qty) }
                 : p
-            )
-          );
+            );
+            syncPresetsToCloud(updated);
+            return updated;
+          });
         }
       }
       // Re-add received selling price to the chosen payment method
       if (!target.paymentMethod || target.paymentMethod === 'tunai') {
-        setCashOnHand((prev) => prev + target.sellingPrice);
+        updatedCash = cashOnHand + target.sellingPrice;
+        setCashOnHand(updatedCash);
       } else {
         const destId = target.destinationAccountId;
         if (destId) {
-          setAccounts((prev) =>
-            prev.map((acc) =>
-              acc.id === destId
-                ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
-                : acc
-            )
+          updatedAccs = updatedAccs.map((acc) =>
+            acc.id === destId
+              ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
+              : acc
           );
+          setAccounts(updatedAccs);
         } else if (target.paymentMethod === 'qris') {
-          setAccounts((prev) =>
-            prev.map((acc) =>
-              acc.category === 'merchant' || acc.id.toLowerCase().includes('qris') || acc.id === 'gopay_merchant'
-                ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
-                : acc
-            )
+          updatedAccs = updatedAccs.map((acc) =>
+            acc.category === 'merchant' || acc.id.toLowerCase().includes('qris') || acc.id === 'gopay_merchant'
+              ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
+              : acc
           );
+          setAccounts(updatedAccs);
         } else if (target.paymentMethod === 'transfer') {
-          setAccounts((prev) =>
-            prev.map((acc) =>
-              acc.category === 'bank' || acc.category === 'ewallet'
-                ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
-                : acc
-            )
+          updatedAccs = updatedAccs.map((acc) =>
+            acc.category === 'bank' || acc.category === 'ewallet'
+              ? { ...acc, balance: acc.balance + target.sellingPrice, updatedAt: Date.now() }
+              : acc
           );
+          setAccounts(updatedAccs);
         }
       }
     }
 
+    const updatedTransaction = { ...target, status: newStatus };
     setTransactions((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
+      prev.map((t) => (t.id === id ? updatedTransaction : t))
     );
+
+    // Sync to Cloud
+    syncTransactionToCloud(updatedTransaction);
+    syncAccountsToCloud(updatedAccs);
+    syncSettingsAndCashToCloud(settings, updatedCash);
   };
 
   // 3. Transfer Balance / Top-Up Modal Handler (Supports Supplier without deducting internal accounts)
@@ -536,6 +627,8 @@ export function App() {
     transfer: Omit<BalanceTransfer, 'id' | 'timestamp' | 'invoiceNumber'>
   ): boolean => {
     const totalDeducted = transfer.amount + transfer.fee;
+    let updatedAccs = [...accounts];
+    let updatedCash = cashOnHand;
 
     if (transfer.fromAccountId === 'pemasok_luar') {
       // Top-up from external supplier: no deduction from internal accounts
@@ -544,32 +637,31 @@ export function App() {
         alert('Kas tunai tidak mencukupi');
         return false;
       }
-      setCashOnHand((prev) => prev - totalDeducted);
+      updatedCash = cashOnHand - totalDeducted;
+      setCashOnHand(updatedCash);
     } else {
       const srcAcc = accounts.find((a) => a.id === transfer.fromAccountId);
       if (!srcAcc || srcAcc.balance < totalDeducted) {
         alert('Saldo sumber tidak mencukupi');
         return false;
       }
-      setAccounts((prev) =>
-        prev.map((a) => {
-          if (a.id === transfer.fromAccountId) {
-            return { ...a, balance: a.balance - totalDeducted, updatedAt: Date.now() };
-          }
-          return a;
-        })
-      );
+      updatedAccs = updatedAccs.map((a) => {
+        if (a.id === transfer.fromAccountId) {
+          return { ...a, balance: a.balance - totalDeducted, updatedAt: Date.now() };
+        }
+        return a;
+      });
+      setAccounts(updatedAccs);
     }
 
     // Add to destination account
-    setAccounts((prev) =>
-      prev.map((a) => {
-        if (a.id === transfer.toAccountId) {
-          return { ...a, balance: a.balance + transfer.amount, updatedAt: Date.now() };
-        }
-        return a;
-      })
-    );
+    updatedAccs = updatedAccs.map((a) => {
+      if (a.id === transfer.toAccountId) {
+        return { ...a, balance: a.balance + transfer.amount, updatedAt: Date.now() };
+      }
+      return a;
+    });
+    setAccounts(updatedAccs);
 
     // Record transfer log
     const transferRecord: BalanceTransfer = {
@@ -580,24 +672,33 @@ export function App() {
     };
     setTransferHistory((prev) => [transferRecord, ...prev]);
 
+    // Sync to Cloud
+    syncTransferToCloud(transferRecord);
+    syncAccountsToCloud(updatedAccs);
+    syncSettingsAndCashToCloud(settings, updatedCash);
+
     return true;
   };
 
   // 4. Update Account Balance Directly
   const handleUpdateAccountBalance = (accountId: AccountKey, newBalance: number) => {
-    setAccounts((prev) =>
-      prev.map((a) => (a.id === accountId ? { ...a, balance: newBalance, updatedAt: Date.now() } : a))
-    );
+    setAccounts((prev) => {
+      const updated = prev.map((a) => (a.id === accountId ? { ...a, balance: newBalance, updatedAt: Date.now() } : a));
+      syncAccountsToCloud(updated);
+      return updated;
+    });
   };
 
   // 5. Update Cash on Hand Directly
   const handleUpdateCashOnHand = (newCash: number) => {
     setCashOnHand(newCash);
+    syncSettingsAndCashToCloud(settings, newCash);
   };
 
   // 6. Save Settings
   const handleSaveSettings = (newSettings: RilcellSettings) => {
     setSettings(newSettings);
+    syncSettingsAndCashToCloud(newSettings, cashOnHand);
   };
 
   // 7. Export / Import / Reset Data

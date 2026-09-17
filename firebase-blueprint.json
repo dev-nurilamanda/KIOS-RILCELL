@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A single POS sales or service transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "serviceName": { "type": "string" },
+        "category": { "type": "string" },
+        "targetNumber": { "type": "string" },
+        "costPrice": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "profit": { "type": "number" },
+        "sourceAccountId": { "type": "string" },
+        "destinationAccountId": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string", "enum": ["sukses", "gagal", "proses"] },
+        "notes": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "presetId": { "type": "string" },
+        "quantity": { "type": "number" },
+        "isDebt": { "type": "boolean" },
+        "debtDueDate": { "type": "string" },
+        "syncedToSheets": { "type": "boolean" }
+      },
+      "required": ["id", "invoiceNumber", "timestamp", "serviceName", "costPrice", "sellingPrice", "profit", "sourceAccountId", "status"]
+    },
+    "ModalAccount": {
+      "title": "ModalAccount",
+      "description": "Counter balance account provider (WeKios, DigiPOS, BSI, etc.)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "balance": { "type": "number" },
+        "initialBalance": { "type": "number" },
+        "minAlertThreshold": { "type": "number" },
+        "color": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "name", "category", "balance"]
+    },
+    "BalanceTransfer": {
+      "title": "BalanceTransfer",
+      "description": "Capital and balance mutation between cash on hand, bank, and server accounts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "fromAccountId": { "type": "string" },
+        "toAccountId": { "type": "string" },
+        "amount": { "type": "number" },
+        "fee": { "type": "number" },
+        "notes": { "type": "string" },
+        "supplierName": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "fromAccountId", "toAccountId", "amount"]
+    },
+    "QuickPresetProduct": {
+      "title": "QuickPresetProduct",
+      "description": "Preset product catalog for fast sales entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "defaultCostPrice": { "type": "number" },
+        "defaultSellingPrice": { "type": "number" },
+        "productType": { "type": "string", "enum": ["digital", "fisik"] },
+        "stockQuantity": { "type": "number" },
+        "defaultSourceAccountId": { "type": "string" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["id", "name", "category", "defaultCostPrice", "defaultSellingPrice"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer contact and credit record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "notes": { "type": "string" },
+        "totalTransactions": { "type": "number" },
+        "totalSpent": { "type": "number" },
+        "totalDebt": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "lastTransactionAt": { "type": "number" }
+      },
+      "required": ["id", "name", "phone"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "Counter configuration and cash on hand state",
+      "type": "object",
+      "properties": {
+        "konterName": { "type": "string" },
+        "konterAddress": { "type": "string" },
+        "konterPhone": { "type": "string" },
+        "receiptFooter": { "type": "string" },
+        "autoSyncGoogleSheets": { "type": "boolean" },
+        "googleAppsScriptUrl": { "type": "string" },
+        "lowBalanceThreshold": { "type": "number" },
+        "defaultPaymentMethod": { "type": "string" },
+        "theme": { "type": "string" },
+        "cashOnHand": { "type": "number" }
+      },
+      "required": ["konterName"]
+    }
+  },
+  "firestore": {
+    "/transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "Collection of all cashier sales and service transactions"
+    },
+    "/accounts/{accountId}": {
+      "schema": { "$ref": "#/entities/ModalAccount" },
+      "description": "Modal accounts (WeKios, DigiPOS, BSI, etc.)"
+    },
+    "/transfers/{transferId}": {
+      "schema": { "$ref": "#/entities/BalanceTransfer" },
+      "description": "Balance mutations and top-up logs"
+    },
+    "/presets/{presetId}": {
+      "schema": { "$ref": "#/entities/QuickPresetProduct" },
+      "description": "Master products and services preset list"
+    },
+    "/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "Customer directory and credit books"
+    },
+    "/settings/config": {
+      "schema": { "$ref": "#/entities/AppSettings" },
+      "description": "Global store settings and cash on hand balance"
+    }
+  }
+}

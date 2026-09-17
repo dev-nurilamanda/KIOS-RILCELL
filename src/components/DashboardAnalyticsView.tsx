@@ -250,81 +250,103 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* 4 Key Metric Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Omzet */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total Omzet Penjualan
+      {/* Unified Compact 4-in-1 Performance & Asset Summary Widget */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-sm relative overflow-hidden">
+        {/* Subtle Top Title Bar */}
+        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Ringkasan Keuangan & Aset
             </span>
-            <span className="p-2 bg-blue-50 text-blue-600 rounded-xl">
-              <ShoppingBag className="w-4 h-4" />
+            <span className="px-2 py-0.2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-bold rounded-full">
+              {validTransactions.length} Transaksi
             </span>
           </div>
-          <div className="mt-2 text-2xl font-black text-slate-900 tracking-tight">
-            {formatRupiah(totalOmzet)}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-            <span>{validTransactions.length} Transaksi Berhasil</span>
-            <span className="text-emerald-600 font-bold">100% Tercatat</span>
-          </div>
+          <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
+            Realtime Akumulasi
+          </span>
         </div>
 
-        {/* Total Modal Keluar */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total Modal Terpotong
-            </span>
-            <span className="p-2 bg-rose-50 text-rose-600 rounded-xl">
-              <Wallet className="w-4 h-4" />
-            </span>
+        {/* 4 Metric Compact Grid (2x2 on mobile, 4 in a row on desktop) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          {/* 1. Omzet Penjualan */}
+          <div className="bg-slate-50/80 dark:bg-slate-800/60 rounded-xl p-2.5 sm:p-3 border border-slate-100 dark:border-slate-700/50 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight truncate">
+                Omzet Penjualan
+              </span>
+              <span className="p-1 bg-blue-100/80 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 rounded-md shrink-0">
+                <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </span>
+            </div>
+            <div className="mt-1.5">
+              <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
+                {formatRupiah(totalOmzet)}
+              </div>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                {validTransactions.length} Trx Sukses
+              </div>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-black text-slate-900 tracking-tight">
-            {formatRupiah(totalModalKeluar)}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-            <span>Dari 8 Server Saldo</span>
-            <span className="text-slate-600 font-medium">Pengeluaran Pokok</span>
-          </div>
-        </div>
 
-        {/* Total Laba Bersih */}
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl p-5 shadow-md">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-100 uppercase tracking-wider">
-              Total Laba Bersih (Untung)
-            </span>
-            <span className="p-2 bg-white/20 text-white rounded-xl">
-              <TrendingUp className="w-4 h-4" />
-            </span>
+          {/* 2. Modal Terpotong */}
+          <div className="bg-slate-50/80 dark:bg-slate-800/60 rounded-xl p-2.5 sm:p-3 border border-slate-100 dark:border-slate-700/50 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight truncate">
+                Modal Terpotong
+              </span>
+              <span className="p-1 bg-rose-100/80 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 rounded-md shrink-0">
+                <Wallet className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </span>
+            </div>
+            <div className="mt-1.5">
+              <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
+                {formatRupiah(totalModalKeluar)}
+              </div>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                Pengeluaran Pokok
+              </div>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-black text-white tracking-tight">
-            {formatRupiah(totalLabaBersih)}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-emerald-100 pt-3 border-t border-white/20">
-            <span>Margin Keuntungan</span>
-            <span className="font-bold text-amber-300">{marginPercentage}% Net Margin</span>
-          </div>
-        </div>
 
-        {/* Total Kas & Saldo Konter */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Kas Laci + Saldo Modal
-            </span>
-            <span className="p-2 bg-purple-50 text-purple-600 rounded-xl">
-              <Banknote className="w-4 h-4" />
-            </span>
+          {/* 3. Laba Bersih (Untung) - Highlighted */}
+          <div className="bg-emerald-50/90 dark:bg-emerald-950/40 rounded-xl p-2.5 sm:p-3 border border-emerald-200 dark:border-emerald-800/60 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-tight truncate">
+                Laba Bersih
+              </span>
+              <span className="p-1 bg-emerald-600 text-white rounded-md shrink-0">
+                <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </span>
+            </div>
+            <div className="mt-1.5">
+              <div className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tight truncate">
+                {formatRupiah(totalLabaBersih)}
+              </div>
+              <div className="text-[9px] sm:text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold truncate mt-0.5">
+                Margin: {marginPercentage}%
+              </div>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-black text-slate-900 tracking-tight">
-            {formatRupiah(totalSaldoModal + cashOnHand)}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-            <span>Kas: {formatRupiah(cashOnHand)}</span>
-            <span className="font-semibold text-slate-700">Aset Konter</span>
+
+          {/* 4. Kas Laci + Saldo Modal (Total Aset) */}
+          <div className="bg-slate-50/80 dark:bg-slate-800/60 rounded-xl p-2.5 sm:p-3 border border-slate-100 dark:border-slate-700/50 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight truncate">
+                Aset (Kas + Saldo)
+              </span>
+              <span className="p-1 bg-purple-100/80 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 rounded-md shrink-0">
+                <Banknote className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </span>
+            </div>
+            <div className="mt-1.5">
+              <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
+                {formatRupiah(totalSaldoModal + cashOnHand)}
+              </div>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                Kas Laci: {formatRupiah(cashOnHand)}
+              </div>
+            </div>
           </div>
         </div>
       </div>
