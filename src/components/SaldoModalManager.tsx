@@ -146,94 +146,107 @@ export const SaldoModalManager: React.FC<SaldoModalManagerProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Top Banner & Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Total Saldo Modal */}
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
-          <div className="absolute right-[-10px] top-[-10px] w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none" />
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-100 uppercase tracking-wider">
-              Total Saldo 8 Akun Modal
-            </span>
-            <span className="p-2 bg-white/15 rounded-xl">
-              <Wallet className="w-5 h-5 text-white" />
-            </span>
-          </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">
-            {formatRupiah(totalModalBalance)}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-emerald-100/90 pt-3 border-t border-white/15">
-            <span>8 Akun Konter Terdaftar</span>
-            <span className="font-semibold text-white">100% Aktif</span>
-          </div>
-        </div>
+      {/* Unified Compact Total Asset & Balance Widget (3 in 1 Widget) */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 rounded-2xl p-4 sm:p-6 text-white border border-slate-800 shadow-xl relative overflow-hidden">
+        {/* Background Ambient Glow */}
+        <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Kas Tunai Konter */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs relative">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Kas Tunai Laci Konter
-            </span>
-            <button
-              onClick={() => {
-                setTempCash(cashOnHand.toString());
-                setIsCashEditOpen(true);
-              }}
-              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition"
-              title="Edit Kas Tunai"
-            >
-              <Edit3 className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            {formatRupiah(cashOnHand)}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-            <span className="flex items-center gap-1">
-              <Banknote className="w-4 h-4 text-emerald-600" />
-              <span>Uang Fisik Diterima</span>
-            </span>
-            <button
-              onClick={() => {
-                setTempCash(cashOnHand.toString());
-                setIsCashEditOpen(true);
-              }}
-              className="text-emerald-600 font-bold hover:underline"
-            >
-              Sesuaikan Kas
-            </button>
-          </div>
-        </div>
-
-        {/* Total Aset Konter & Action Button */}
-        <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xs sm:col-span-2 lg:col-span-1 flex flex-col justify-between">
+        {/* Top Header: Total Aset Overview */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800/90 relative z-10">
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Total Aset (Saldo + Kas)
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">
+                Total Aset Konter (Saldo + Kas Laci)
               </span>
-              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full">
+              <span className="px-2 py-0.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-black rounded-full">
                 RILCELL
               </span>
             </div>
-            <div className="mt-2 text-2xl sm:text-3xl font-black text-white tracking-tight">
-              {formatRupiah(totalCapitalAssets)}
+            <div className="mt-1 text-2xl sm:text-3xl font-black text-white tracking-tight flex items-baseline gap-2">
+              <span className="text-emerald-400">{formatRupiah(totalCapitalAssets)}</span>
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{accounts.length} Akun Modal & Kas Aktif</span>
+          </div>
+        </div>
+
+        {/* Middle: 2 Sub-metrics (Saldo Digital & Kas Tunai Laci) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 my-4 relative z-10">
+          {/* Sub-Metric 1: Total Saldo 8 Akun Digital */}
+          <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl p-3.5 flex items-center justify-between gap-3 transition">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                <Wallet className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide block truncate">
+                  Total Saldo {accounts.length} Akun Modal
+                </span>
+                <span className="text-base sm:text-lg font-black text-white block truncate">
+                  {formatRupiah(totalModalBalance)}
+                </span>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-md shrink-0">
+              Digital
+            </span>
+          </div>
+
+          {/* Sub-Metric 2: Kas Tunai Laci Konter */}
+          <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl p-3.5 flex items-center justify-between gap-3 transition">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+                <Banknote className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide block truncate">
+                    Kas Tunai Laci Konter
+                  </span>
+                  <button
+                    onClick={() => {
+                      setTempCash(cashOnHand.toString());
+                      setIsCashEditOpen(true);
+                    }}
+                    className="text-slate-400 hover:text-amber-400 p-0.5 rounded transition"
+                    title="Sesuaikan Kas Tunai Laci"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <span className="text-base sm:text-lg font-black text-amber-300 block truncate">
+                  {formatRupiah(cashOnHand)}
+                </span>
+              </div>
+            </div>
             <button
-              id="btn-open-transfer-modal"
               onClick={() => {
-                setTransferError('');
-                setIsTransferModalOpen(true);
+                setTempCash(cashOnHand.toString());
+                setIsCashEditOpen(true);
               }}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2 px-3.5 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-sm"
+              className="text-[11px] font-bold text-amber-400 hover:text-amber-300 bg-amber-950/60 hover:bg-amber-900/60 border border-amber-700/60 px-2.5 py-1 rounded-lg transition shrink-0 cursor-pointer"
             >
-              <ArrowRightLeft className="w-4 h-4" />
-              <span>Pindah Saldo / Top-Up Modal</span>
+              Sesuaikan
             </button>
           </div>
+        </div>
+
+        {/* Bottom Action: Single Unified Button Pindah Saldo Aset / Top-Up Saldo Aset */}
+        <div className="pt-3 border-t border-slate-800/90 relative z-10">
+          <button
+            id="btn-open-transfer-modal"
+            onClick={() => {
+              setTransferError('');
+              setIsTransferModalOpen(true);
+            }}
+            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 active:scale-[0.99] text-slate-950 font-black py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-500/25 transition-all duration-150 cursor-pointer"
+          >
+            <ArrowRightLeft className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+            <span>Pindah Saldo Aset / Top-Up Saldo Aset</span>
+          </button>
         </div>
       </div>
 
