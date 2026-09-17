@@ -199,54 +199,54 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       {/* Sticky Header: Pencarian, Filter Rentang Waktu, Dropdown Filter & Ringkasan Transaksi (Tidak terpengaruh scrolling) */}
-      <div className="sticky top-16 z-30 -mt-1 pt-1 pb-2 bg-slate-100/95 backdrop-blur-md space-y-2">
+      <div className="sticky top-[70px] z-30 -mt-1 pt-1.5 pb-2.5 bg-slate-100/95 backdrop-blur-md space-y-2">
         {/* Main Filter & Search Card */}
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 border border-slate-200/90 shadow-sm shadow-slate-900/5 space-y-2.5">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-slate-200/90 shadow-md shadow-slate-900/5 space-y-3">
           {/* Top Row: Search Box + Filter Mobile Toggle + Date Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
             {/* Search Box */}
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400" />
+              <Search className="w-4.5 h-4.5 absolute left-3.5 top-3 text-slate-400" />
               <input
                 type="text"
                 placeholder="Cari no. tujuan, layanan, invoice, nama customer, atau SN..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-8 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10.5 pr-9 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
                   title="Hapus pencarian"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
 
             {/* Actions: Mobile Filter Toggle + Date Filter Pills */}
-            <div className="flex items-center gap-1.5 shrink-0 justify-between sm:justify-start">
+            <div className="flex items-center gap-2 shrink-0 justify-between sm:justify-start">
               {/* Mobile Filter Dropdowns Toggle Button */}
               <button
                 type="button"
                 onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-                className={`sm:hidden px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0 border cursor-pointer ${
+                className={`sm:hidden px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 border cursor-pointer h-11 ${
                   activeFiltersCount > 0 || isFilterExpanded
                     ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                    : 'bg-slate-100 text-slate-600 border-slate-200'
+                    : 'bg-slate-100 text-slate-700 border-slate-200'
                 }`}
                 title="Filter kategori, akun & status"
               >
-                <Filter className="w-3.5 h-3.5" />
+                <Filter className="w-4 h-4" />
                 <span>Filter</span>
                 {activeFiltersCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
+                  <span className="w-4.5 h-4.5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
                     {activeFiltersCount}
                   </span>
                 )}
-                {isFilterExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {isFilterExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
 
               {/* Date Filter Pills */}
@@ -262,10 +262,10 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
                   <button
                     key={d.id}
                     onClick={() => setDateRange(d.id)}
-                    className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                    className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap cursor-pointer ${
                       dateRange === d.id
-                        ? 'bg-white text-emerald-700 shadow-xs'
-                        : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white text-emerald-800 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     {d.label}

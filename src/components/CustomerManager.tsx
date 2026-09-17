@@ -401,28 +401,28 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       {/* Sticky Header: Pencarian + Aksi Tambah & Reload + Navbar Filter Kategori (Tidak terpengaruh scrolling) */}
-      <div className="sticky top-16 z-30 -mt-1 pt-1 pb-2 bg-slate-100/95 backdrop-blur-md">
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-sm shadow-slate-900/5 space-y-2.5">
+      <div className="sticky top-[70px] z-30 -mt-1 pt-1.5 pb-2.5 bg-slate-100/95 backdrop-blur-md">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-slate-200/90 shadow-md shadow-slate-900/5 space-y-3">
           {/* Top Row: Search Box + Tombol Tambah & Backup */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400" />
+              <Search className="w-4.5 h-4.5 absolute left-3.5 top-3 text-slate-400" />
               <input
                 type="text"
                 placeholder="Cari nama, no HP, No Meter PLN, Rekening, atau ID Game..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-8 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10.5 pr-9 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
                   title="Hapus pencarian"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -431,10 +431,10 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             <button
               type="button"
               onClick={handleExportJSON}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200/70 shrink-0 cursor-pointer"
+              className="p-2.5 sm:px-3.5 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border border-slate-200/70 shrink-0 cursor-pointer h-11"
               title="Ekspor / Backup Database Pelanggan (JSON)"
             >
-              <Download className="w-3.5 h-3.5 text-slate-600" />
+              <Download className="w-4 h-4 text-slate-600" />
               <span className="hidden md:inline">Backup</span>
             </button>
 
@@ -449,10 +449,10 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200/70 shrink-0 cursor-pointer"
+              className="p-2.5 sm:px-3.5 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border border-slate-200/70 shrink-0 cursor-pointer h-11"
               title="Impor Database Pelanggan dari File JSON"
             >
-              <Upload className="w-3.5 h-3.5 text-slate-600" />
+              <Upload className="w-4 h-4 text-slate-600" />
               <span className="hidden md:inline">Impor</span>
             </button>
 
@@ -461,15 +461,15 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
               type="button"
               id="btn-add-customer"
               onClick={openAddModal}
-              className="px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-black transition shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+              className="px-4 sm:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black transition shadow-xs flex items-center gap-2 shrink-0 cursor-pointer h-11"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
+              <Plus className="w-4.5 h-4.5 stroke-[3]" />
               <span>Tambah Pelanggan</span>
             </button>
           </div>
 
           {/* Bottom Row: Filter Tabs Pelanggan */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-0.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
             {[
               { id: 'all' as const, label: `Semua (${customers.length})`, icon: Users },
               { id: 'game' as const, label: 'Game ID', icon: Gamepad2 },
@@ -484,13 +484,13 @@ export const CustomerManager: React.FC<CustomerManagerProps> = ({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveFilter(tab.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
                     isActive
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-4 h-4" />
                   <span>{tab.label}</span>
                 </button>
               );

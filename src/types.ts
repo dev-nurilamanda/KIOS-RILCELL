@@ -91,6 +91,14 @@ export interface RilcellSettings {
   theme?: AppTheme; // 'light' | 'dark' | 'system'
 }
 
+export interface ClearDemoOptions {
+  clearTransactions: boolean;
+  clearTransfers: boolean;
+  clearCustomers: boolean;
+  resetBalancesToZero: boolean;
+  clearPresets?: boolean;
+}
+
 export interface QuickPresetProduct {
   id: string;
   category: ServiceCategory;

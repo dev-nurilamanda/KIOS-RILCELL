@@ -387,9 +387,9 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-28 md:pb-20 animate-in fade-in duration-200">
       {/* Category Pills Switcher - Floating & Sticky at Top under Navbar */}
-      <div className="sticky top-16 z-30 -mt-1 pt-1 pb-1.5 bg-slate-100/90 backdrop-blur-md transition-all">
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2 sm:p-2.5 shadow-sm shadow-slate-900/5 border border-slate-200/90 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+      <div className="sticky top-[70px] z-30 -mt-1 pt-1.5 pb-2 bg-slate-100/95 backdrop-blur-md transition-all">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-md shadow-slate-900/5 border border-slate-200/90 flex items-center justify-between gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 py-1">
             {CATEGORY_ITEMS.map((cat) => {
               const isActive = selectedCategory === cat.id;
               return (
@@ -397,13 +397,13 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                   key={cat.id}
                   type="button"
                   onClick={() => handleCategoryChange(cat.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                  className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-150 cursor-pointer ${
                     isActive
                       ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-[1.02]'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <span className="text-sm">{cat.icon}</span>
+                  <span className="text-base sm:text-lg leading-none">{cat.icon}</span>
                   <span>{cat.label}</span>
                 </button>
               );
@@ -414,10 +414,10 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
             <button
               type="button"
               onClick={onOpenMasterProducts}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 rounded-xl text-xs font-bold transition shrink-0 border border-slate-200 cursor-pointer"
+              className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 border border-slate-200 cursor-pointer"
               title="Kelola Daftar Produk"
             >
-              <Package className="w-4 h-4 text-emerald-600" />
+              <Package className="w-4.5 h-4.5 text-emerald-600" />
               <span>Daftar Produk</span>
             </button>
           )}

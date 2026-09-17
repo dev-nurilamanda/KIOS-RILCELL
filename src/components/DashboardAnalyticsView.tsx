@@ -69,58 +69,130 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
 
   // Chart Data preparation based on selected timeframe
   const chartData = useMemo(() => {
-    const map = new Map<string, { label: string; omzet: number; profit: number; modal: number; count: number }>();
+    if (validTransactions.length === 0) {
+      return [];
+    }
 
-    validTransactions.forEach((trx) => {
-      const date = new Date(trx.timestamp);
-      let key = '';
-      let label = '';
+    // Sort chronologically ascending
+    const sortedTrx = [...validTransactions].sort((a, b) => a.timestamp - b.timestamp);
 
-      if (timeframe === 'daily') {
-        // Hourly or Day breakdown (e.g. today's hours or last 7 days)
-        key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-        label = `${date.getDate()} ${date.toLocaleString('id-ID', { month: 'short' })}`;
-      } else if (timeframe === 'weekly') {
-        // Group by day of week or weekly buckets
-        const dayOfWeek = date.toLocaleDateString('id-ID', { weekday: 'short' });
-        key = `${date.getFullYear()}-W-${Math.ceil(date.getDate() / 7)}-${dayOfWeek}`;
-        label = dayOfWeek;
-      } else if (timeframe === 'monthly') {
-        // Group by months
-        key = `${date.getFullYear()}-${date.getMonth() + 1}`;
-        label = date.toLocaleString('id-ID', { month: 'short', year: '2-digit' });
-      } else {
-        // Yearly
-        key = `${date.getFullYear()}`;
-        label = `${date.getFullYear()}`;
-      }
+    if (timeframe === 'daily') {
+      // Group by Day (YYYY-MM-DD)
+      const dayMap = new Map<string, { label: string; dateSort: number; omzet: number; profit: number; modal: number; count: number }>();
 
-      const existing = map.get(key) || { label, omzet: 0, profit: 0, modal: 0, count: 0 };
+      sortedTrx.forEach((trx) => {
+        const d = new Date(trx.timestamp);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const key = `${yyyy}-${mm}-${dd}`;
+        const label = `${d.getDate()} ${d.toLocaleString('id-ID', { month: 'short' })}`;
+
+        const existing = dayMap.get(key) || {
+          label,
+          dateSort: new Date(yyyy, d.getMonth(), d.getDate()).getTime(),
+          omzet: 0,
+          profit: 0,
+          modal: 0,
+          count: 0,
+        };
+        existing.omzet += trx.sellingPrice;
+        existing.modal += trx.costPrice;
+        existing.profit += trx.profit;
+        existing.count += 1;
+        dayMap.set(key, existing);
+      });
+
+      return Array.from(dayMap.values()).sort((a, b) => a.dateSort - b.dateSort);
+    }
+
+    if (timeframe === 'weekly') {
+      // Group by Week (Week of Year)
+      const weekMap = new Map<string, { label: string; weekSort: number; omzet: number; profit: number; modal: number; count: number }>();
+
+      sortedTrx.forEach((trx) => {
+        const d = new Date(trx.timestamp);
+        // Get start of week (Monday)
+        const dayOfWeek = (d.getDay() + 6) % 7; // 0 = Mon, 6 = Sun
+        const startOfWeek = new Date(d);
+        startOfWeek.setDate(d.getDate() - dayOfWeek);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const key = `${startOfWeek.getFullYear()}-${startOfWeek.getMonth() + 1}-${startOfWeek.getDate()}`;
+        const label = `${startOfWeek.getDate()} ${startOfWeek.toLocaleString('id-ID', { month: 'short' })}`;
+
+        const existing = weekMap.get(key) || {
+          label: `Mgg ${label}`,
+          weekSort: startOfWeek.getTime(),
+          omzet: 0,
+          profit: 0,
+          modal: 0,
+          count: 0,
+        };
+        existing.omzet += trx.sellingPrice;
+        existing.modal += trx.costPrice;
+        existing.profit += trx.profit;
+        existing.count += 1;
+        weekMap.set(key, existing);
+      });
+
+      return Array.from(weekMap.values()).sort((a, b) => a.weekSort - b.weekSort);
+    }
+
+    if (timeframe === 'monthly') {
+      // Group by Month (YYYY-MM)
+      const monthMap = new Map<string, { label: string; monthSort: number; omzet: number; profit: number; modal: number; count: number }>();
+
+      sortedTrx.forEach((trx) => {
+        const d = new Date(trx.timestamp);
+        const yyyy = d.getFullYear();
+        const mm = d.getMonth();
+        const key = `${yyyy}-${mm}`;
+        const label = d.toLocaleString('id-ID', { month: 'short', year: '2-digit' });
+
+        const existing = monthMap.get(key) || {
+          label,
+          monthSort: new Date(yyyy, mm, 1).getTime(),
+          omzet: 0,
+          profit: 0,
+          modal: 0,
+          count: 0,
+        };
+        existing.omzet += trx.sellingPrice;
+        existing.modal += trx.costPrice;
+        existing.profit += trx.profit;
+        existing.count += 1;
+        monthMap.set(key, existing);
+      });
+
+      return Array.from(monthMap.values()).sort((a, b) => a.monthSort - b.monthSort);
+    }
+
+    // Yearly
+    const yearMap = new Map<string, { label: string; yearSort: number; omzet: number; profit: number; modal: number; count: number }>();
+    sortedTrx.forEach((trx) => {
+      const d = new Date(trx.timestamp);
+      const yyyy = d.getFullYear();
+      const key = `${yyyy}`;
+      const label = `${yyyy}`;
+
+      const existing = yearMap.get(key) || {
+        label,
+        yearSort: yyyy,
+        omzet: 0,
+        profit: 0,
+        modal: 0,
+        count: 0,
+      };
       existing.omzet += trx.sellingPrice;
       existing.modal += trx.costPrice;
       existing.profit += trx.profit;
       existing.count += 1;
-      map.set(key, existing);
+      yearMap.set(key, existing);
     });
 
-    const result = Array.from(map.values());
-    // If not enough data points, create meaningful placeholders for visual feedback
-    if (result.length <= 1) {
-      const fallbackDays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-      return fallbackDays.map((d, i) => {
-        const matching = result[i];
-        return {
-          label: d,
-          omzet: matching ? matching.omzet : Math.floor((totalOmzet / 7) * (0.8 + i * 0.05)),
-          profit: matching ? matching.profit : Math.floor((totalLabaBersih / 7) * (0.8 + i * 0.05)),
-          modal: matching ? matching.modal : Math.floor((totalModalKeluar / 7) * (0.8 + i * 0.05)),
-          count: matching ? matching.count : 1,
-        };
-      });
-    }
-
-    return result;
-  }, [validTransactions, timeframe, totalOmzet, totalLabaBersih, totalModalKeluar]);
+    return Array.from(yearMap.values()).sort((a, b) => a.yearSort - b.yearSort);
+  }, [validTransactions, timeframe]);
 
   // Top Performing Services
   const topServices = useMemo(() => {
@@ -271,7 +343,7 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
           </div>
 
           {/* Timeframe Filter Buttons */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl self-start sm:self-auto overflow-x-auto no-scrollbar">
             {(
               [
                 { id: 'daily', label: 'Harian' },
@@ -283,10 +355,10 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
               <button
                 key={tf.id}
                 onClick={() => setTimeframe(tf.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                className={`px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap cursor-pointer ${
                   timeframe === tf.id
-                    ? 'bg-white text-emerald-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {tf.label}
@@ -297,69 +369,79 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
 
         {/* Recharts Area / Bar Chart */}
         <div className="h-72 w-full pt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-              <defs>
-                <linearGradient id="omzetGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#059669" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#059669" stopOpacity={0.0} />
-                </linearGradient>
-                <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis 
-                dataKey="label" 
-                tickLine={false} 
-                axisLine={{ stroke: '#cbd5e1' }}
-                tick={{ fontSize: 11, fill: '#64748b' }}
-              />
-              <YAxis 
-                tickLine={false} 
-                axisLine={false}
-                tick={{ fontSize: 10, fill: '#94a3b8' }}
-                tickFormatter={(val) => `${val >= 1000000 ? `${(val / 1000000).toFixed(1)}jt` : `${val / 1000}k`}`}
-              />
-              <Tooltip 
-                formatter={(val: number | undefined) => [formatRupiah(val || 0), '']}
-                contentStyle={{ 
-                  backgroundColor: '#0f172a', 
-                  borderRadius: '12px', 
-                  color: '#fff', 
-                  fontSize: '12px',
-                  border: 'none',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)'
-                }}
-                labelStyle={{ fontWeight: 'bold', color: '#cbd5e1', marginBottom: '4px' }}
-              />
-              <Legend 
-                verticalAlign="top" 
-                align="right"
-                iconType="circle"
-                wrapperStyle={{ paddingBottom: '10px', fontSize: '11px' }}
-              />
-              <Area 
-                type="monotone" 
-                name="Total Omzet" 
-                dataKey="omzet" 
-                stroke="#059669" 
-                strokeWidth={2.5}
-                fillOpacity={1} 
-                fill="url(#omzetGradient)" 
-              />
-              <Area 
-                type="monotone" 
-                name="Laba Bersih (Untung)" 
-                dataKey="profit" 
-                stroke="#f59e0b" 
-                strokeWidth={2.5}
-                fillOpacity={1} 
-                fill="url(#profitGradient)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {chartData.length === 0 ? (
+            <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+              <BarChart3 className="w-10 h-10 text-slate-300 dark:text-slate-600 mb-2" />
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Belum Ada Data Transaksi</p>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">
+                Grafik omzet dan keuntungan akan otomatis terbentuk secara riil begitu Anda mulai mencatat transaksi di menu Kasir.
+              </p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="omzetGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#059669" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#059669" stopOpacity={0.0} />
+                  </linearGradient>
+                  <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="label" 
+                  tickLine={false} 
+                  axisLine={{ stroke: '#cbd5e1' }}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                />
+                <YAxis 
+                  tickLine={false} 
+                  axisLine={false}
+                  tick={{ fontSize: 10, fill: '#94a3b8' }}
+                  tickFormatter={(val) => `${val >= 1000000 ? `${(val / 1000000).toFixed(1)}jt` : `${val / 1000}k`}`}
+                />
+                <Tooltip 
+                  formatter={(val: number | undefined) => [formatRupiah(val || 0), '']}
+                  contentStyle={{ 
+                    backgroundColor: '#0f172a', 
+                    borderRadius: '12px', 
+                    color: '#fff', 
+                    fontSize: '12px',
+                    border: 'none',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)'
+                  }}
+                  labelStyle={{ fontWeight: 'bold', color: '#cbd5e1', marginBottom: '4px' }}
+                />
+                <Legend 
+                  verticalAlign="top" 
+                  align="right"
+                  iconType="circle"
+                  wrapperStyle={{ paddingBottom: '10px', fontSize: '11px' }}
+                />
+                <Area 
+                  type="monotone" 
+                  name="Total Omzet" 
+                  dataKey="omzet" 
+                  stroke="#059669" 
+                  strokeWidth={2.5}
+                  fillOpacity={1} 
+                  fill="url(#omzetGradient)" 
+                />
+                <Area 
+                  type="monotone" 
+                  name="Laba Bersih (Untung)" 
+                  dataKey="profit" 
+                  stroke="#f59e0b" 
+                  strokeWidth={2.5}
+                  fillOpacity={1} 
+                  fill="url(#profitGradient)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -377,7 +459,7 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
 
           <div className="divide-y divide-slate-100">
             {topServices.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">Belum ada data transaksi.</p>
+              <p className="text-xs text-slate-400 py-6 text-center">Belum ada data transaksi yang tercatat.</p>
             ) : (
               topServices.map((svc, idx) => (
                 <div key={svc.name} className="py-3 flex items-center justify-between gap-3 text-xs">
@@ -413,25 +495,29 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
           </div>
 
           <div className="space-y-3">
-            {categoryBreakdown.map((cat) => {
-              const pct = totalOmzet > 0 ? Math.round((cat.omzet / totalOmzet) * 100) : 0;
-              return (
-                <div key={cat.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-800">{cat.name}</span>
-                    <span className="font-bold text-slate-900">
-                      {formatRupiah(cat.omzet)} ({pct}%)
-                    </span>
+            {categoryBreakdown.length === 0 ? (
+              <p className="text-xs text-slate-400 py-6 text-center">Belum ada kategori yang ditransaksikan.</p>
+            ) : (
+              categoryBreakdown.map((cat) => {
+                const pct = totalOmzet > 0 ? Math.round((cat.omzet / totalOmzet) * 100) : 0;
+                return (
+                  <div key={cat.name} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-slate-800">{cat.name}</span>
+                      <span className="font-bold text-slate-900">
+                        {formatRupiah(cat.omzet)} ({pct}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct > 0 ? Math.max(3, pct) : 0}%`, backgroundColor: cat.color }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${Math.max(5, pct)}%`, backgroundColor: cat.color }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

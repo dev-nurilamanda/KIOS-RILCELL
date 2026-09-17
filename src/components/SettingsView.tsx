@@ -21,9 +21,16 @@ import {
   Monitor,
   ChevronRight,
   Sparkles,
-  X
+  X,
+  Trash2,
+  Eraser,
+  ShieldCheck,
+  CheckSquare,
+  Square,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
-import { RilcellSettings, ModalAccount, RilcellTransaction, AppTheme } from '../types';
+import { RilcellSettings, ModalAccount, RilcellTransaction, AppTheme, ClearDemoOptions } from '../types';
 import { GOOGLE_APPS_SCRIPT_TEMPLATE, syncAccountsToGoogleSheets, fetchFromGoogleSheets } from '../services/googleSheetsService';
 import { formatRupiah } from '../utils/formatters';
 
@@ -32,10 +39,14 @@ interface SettingsViewProps {
   accounts: ModalAccount[];
   transactions: RilcellTransaction[];
   presetsCount?: number;
+  customersCount?: number;
+  transfersCount?: number;
+  cashOnHand?: number;
   onSaveSettings: (newSettings: RilcellSettings) => void;
   onExportAllData: () => void;
   onImportAllData: (jsonData: string) => boolean;
   onResetToDemo: () => void;
+  onClearDemoData?: (options: ClearDemoOptions) => void;
   onOpenInstallGuide?: () => void;
   onOpenMasterProducts?: () => void;
   onSyncWithGoogleSheets?: () => Promise<void>;
@@ -46,10 +57,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   accounts,
   transactions,
   presetsCount = 0,
+  customersCount = 0,
+  transfersCount = 0,
+  cashOnHand = 0,
   onSaveSettings,
   onExportAllData,
   onImportAllData,
   onResetToDemo,
+  onClearDemoData,
   onOpenInstallGuide,
   onOpenMasterProducts,
   onSyncWithGoogleSheets,
@@ -58,6 +73,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [themeSavedToast, setThemeSavedToast] = useState<string | null>(null);
+  const [showClearDemoModal, setShowClearDemoModal] = useState(false);
+  const [clearDemoSuccessToast, setClearDemoSuccessToast] = useState<string | null>(null);
+  const [clearOptions, setClearOptions] = useState<ClearDemoOptions>({
+    clearTransactions: true,
+    clearTransfers: true,
+    clearCustomers: true,
+    resetBalancesToZero: true,
+    clearPresets: false,
+  });
   const [isCopyingScript, setIsCopyingScript] = useState(false);
   const [showScriptModal, setShowScriptModal] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -67,6 +91,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   useEffect(() => {
     setFormData(settings);
   }, [settings]);
+
+  const totalAccountBalances = accounts.reduce((acc, a) => acc + (a.balance || 0), 0);
+  const totalAllMoney = totalAccountBalances + (cashOnHand || 0);
+
+  const handleExecuteClearDemoData = () => {
+    if (!onClearDemoData) return;
+    onClearDemoData(clearOptions);
+    setShowClearDemoModal(false);
+    setClearDemoSuccessToast('✨ Data demo berhasil dibersihkan! Aplikasi siap digunakan untuk mencatat transaksi riil konter Anda.');
+    setTimeout(() => setClearDemoSuccessToast(null), 5000);
+  };
 
   const handleSelectTheme = (newTheme: AppTheme) => {
     const updated = { ...formData, theme: newTheme };
@@ -452,6 +487,74 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       )}
 
+      {/* Operasional Data Riil & Pembersihan Data Demo Card */}
+      <div className="bg-gradient-to-br from-white via-rose-50/20 to-amber-50/30 rounded-2xl p-5 sm:p-6 border border-rose-200/90 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-rose-100">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
+              <Eraser className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-bold text-slate-900">Operasional Data Riil & Bersihkan Data Demo</h3>
+                {transactions.length === 0 ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    Siap Operasi Riil (Data Bersih)
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                    <AlertCircle className="w-3 h-3 text-amber-600" />
+                    Tersedia {transactions.length} Transaksi Simulasi
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Hapus transaksi contoh, pelanggan demo, dan nolkan saldo modal agar konter Anda mulai mencatat pembukuan asli dari nol.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="open-clear-demo-modal-btn"
+            onClick={() => setShowClearDemoModal(true)}
+            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Bersihkan Data Demo</span>
+          </button>
+        </div>
+
+        {/* Ringkasan Status Data Saat Ini */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[11px] text-slate-500 block font-medium">Riwayat Transaksi</span>
+            <span className="text-sm font-bold text-slate-900">{transactions.length} Trx</span>
+          </div>
+          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[11px] text-slate-500 block font-medium">Buku Pelanggan</span>
+            <span className="text-sm font-bold text-slate-900">{customersCount} Kontak</span>
+          </div>
+          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[11px] text-slate-500 block font-medium">Riwayat Mutasi Saldo</span>
+            <span className="text-sm font-bold text-slate-900">{transfersCount} Log</span>
+          </div>
+          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[11px] text-slate-500 block font-medium">Total Saldo + Kas</span>
+            <span className="text-sm font-bold text-slate-900 truncate">{formatRupiah(totalAllMoney)}</span>
+          </div>
+        </div>
+
+        {/* Toast Notifikasi Sukses Pembersihan */}
+        {clearDemoSuccessToast && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-semibold">{clearDemoSuccessToast}</span>
+          </div>
+        )}
+      </div>
+
       {/* Backup & Restore JSON Data */}
       <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
         <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
@@ -702,6 +805,241 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               >
                 <Check className="w-4 h-4" />
                 <span>Selesai</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Pop-up Modal Dialog Pembersihan Data Demo (Siap Operasional Real) */}
+      {showClearDemoModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setShowClearDemoModal(false)}
+        >
+          <div 
+            id="clear-demo-modal"
+            className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 space-y-5 animate-in zoom-in-95 duration-200 select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">Bersihkan Data Demo</h3>
+                  <p className="text-xs text-slate-500">Persiapan membuka transaksi operasional riil konter</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                id="close-clear-modal-btn"
+                onClick={() => setShowClearDemoModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
+                title="Tutup"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Mode Preset Selectors */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setClearOptions({
+                  clearTransactions: true,
+                  clearTransfers: true,
+                  clearCustomers: true,
+                  resetBalancesToZero: true,
+                  clearPresets: false,
+                })}
+                className="flex-1 text-[11px] font-bold py-2 px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Pilihan Rekomendasi</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setClearOptions({
+                  clearTransactions: true,
+                  clearTransfers: true,
+                  clearCustomers: true,
+                  resetBalancesToZero: true,
+                  clearPresets: true,
+                })}
+                className="text-[11px] font-bold py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-slate-500" />
+                <span>Pilih Semua</span>
+              </button>
+            </div>
+
+            {/* Checklist Options */}
+            <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
+              {/* Option 1: Transaksi */}
+              <label 
+                className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition select-none ${
+                  clearOptions.clearTransactions 
+                    ? 'border-rose-300 bg-rose-50/50' 
+                    : 'border-slate-200 bg-slate-50/60 opacity-80'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={clearOptions.clearTransactions}
+                  onChange={(e) => setClearOptions({ ...clearOptions, clearTransactions: e.target.checked })}
+                  className="mt-1 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-900">Hapus Semua Riwayat Transaksi</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                      {transactions.length} Transaksi
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Mengosongkan seluruh riwayat penjualan & mereset laporan laba/rugi menjadi Rp 0.
+                  </p>
+                </div>
+              </label>
+
+              {/* Option 2: Mutasi Saldo */}
+              <label 
+                className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition select-none ${
+                  clearOptions.clearTransfers 
+                    ? 'border-rose-300 bg-rose-50/50' 
+                    : 'border-slate-200 bg-slate-50/60 opacity-80'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={clearOptions.clearTransfers}
+                  onChange={(e) => setClearOptions({ ...clearOptions, clearTransfers: e.target.checked })}
+                  className="mt-1 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-900">Hapus Riwayat Mutasi / Transfer Saldo</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                      {transfersCount} Log Mutasi
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Membersihkan log perpindahan saldo antar server/bank/kas demo.
+                  </p>
+                </div>
+              </label>
+
+              {/* Option 3: Pelanggan Demo */}
+              <label 
+                className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition select-none ${
+                  clearOptions.clearCustomers 
+                    ? 'border-rose-300 bg-rose-50/50' 
+                    : 'border-slate-200 bg-slate-50/60 opacity-80'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={clearOptions.clearCustomers}
+                  onChange={(e) => setClearOptions({ ...clearOptions, clearCustomers: e.target.checked })}
+                  className="mt-1 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-900">Hapus Data Pelanggan Demo</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                      {customersCount} Pelanggan
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Menghapus kontak contoh (Pak Budi, Mas Dimas, Bu Siti) agar siap diisi pelanggan asli Anda.
+                  </p>
+                </div>
+              </label>
+
+              {/* Option 4: Saldo Akun ke 0 */}
+              <label 
+                className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition select-none ${
+                  clearOptions.resetBalancesToZero 
+                    ? 'border-rose-300 bg-rose-50/50' 
+                    : 'border-slate-200 bg-slate-50/60 opacity-80'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={clearOptions.resetBalancesToZero}
+                  onChange={(e) => setClearOptions({ ...clearOptions, resetBalancesToZero: e.target.checked })}
+                  className="mt-1 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-900">Reset Semua Saldo Modal & Kas ke Rp 0</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 truncate max-w-[120px]">
+                      {formatRupiah(totalAllMoney)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Nolkan saldo WeKios, DigiPOS, DANA, Bank, dan Kas Tunai agar Anda bisa mengisi saldo modal riil yang sebenarnya.
+                  </p>
+                </div>
+              </label>
+
+              {/* Option 5: Master Preset Produk (Optional) */}
+              <label 
+                className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition select-none ${
+                  clearOptions.clearPresets 
+                    ? 'border-rose-300 bg-rose-50/50' 
+                    : 'border-slate-200 bg-slate-50/60'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={clearOptions.clearPresets}
+                  onChange={(e) => setClearOptions({ ...clearOptions, clearPresets: e.target.checked })}
+                  className="mt-1 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-900">Hapus Daftar Master Produk & Preset</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                      {presetsCount} Produk
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    <strong className="text-emerald-700 font-semibold">Saran: Jangan dicentang</strong> jika Anda ingin tetap menggunakan daftar paket data, pulsa, dan token PLN siap pakai.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {/* Warning Note */}
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Pemberitahuan:</span>
+                <span>Tindakan ini akan mengosongkan data yang dipilih pada penyimpanan lokal browser ini. Anda tetap dapat mencadangkan data JSON terlebih dahulu jika dibutuhkan.</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowClearDemoModal(false)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                id="confirm-execute-clear-demo-btn"
+                onClick={handleExecuteClearDemoData}
+                disabled={!clearOptions.clearTransactions && !clearOptions.clearTransfers && !clearOptions.clearCustomers && !clearOptions.resetBalancesToZero && !clearOptions.clearPresets}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Bersihkan Data Sekarang</span>
               </button>
             </div>
           </div>

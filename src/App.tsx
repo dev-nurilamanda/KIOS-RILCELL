@@ -7,7 +7,8 @@ import {
   AccountKey,
   QuickPresetProduct,
   CustomerRecord,
-  ServiceCategory
+  ServiceCategory,
+  ClearDemoOptions
 } from './types';
 import { 
   INITIAL_MODAL_ACCOUNTS, 
@@ -649,6 +650,33 @@ export function App() {
     setCustomers(INITIAL_CUSTOMERS);
   };
 
+  // 8. Clear Demo Data for Real Operational Readiness
+  const handleClearDemoData = (options: ClearDemoOptions) => {
+    if (options.clearTransactions) {
+      setTransactions([]);
+    }
+    if (options.clearTransfers) {
+      setTransferHistory([]);
+    }
+    if (options.clearCustomers) {
+      setCustomers([]);
+    }
+    if (options.resetBalancesToZero) {
+      setAccounts((prev) =>
+        prev.map((acc) => ({
+          ...acc,
+          balance: 0,
+          initialBalance: 0,
+          updatedAt: Date.now(),
+        }))
+      );
+      setCashOnHand(0);
+    }
+    if (options.clearPresets) {
+      setPresets([]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 pb-20 md:pb-8 transition-colors duration-150">
       {/* Top Navbar */}
@@ -750,10 +778,14 @@ export function App() {
             accounts={accounts}
             transactions={transactions}
             presetsCount={presets.length}
+            customersCount={customers.length}
+            transfersCount={transferHistory.length}
+            cashOnHand={cashOnHand}
             onSaveSettings={handleSaveSettings}
             onExportAllData={handleExportAllData}
             onImportAllData={handleImportAllData}
             onResetToDemo={handleResetToDemo}
+            onClearDemoData={handleClearDemoData}
             onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
             onOpenMasterProducts={() => setActiveTab('products')}
           />
