@@ -20,6 +20,7 @@ import {
   Moon,
   Monitor,
   ChevronRight,
+  ArrowLeft,
   Sparkles,
   X,
   Trash2,
@@ -29,7 +30,14 @@ import {
   Square,
   CheckCircle2,
   AlertCircle,
-  Cloud
+  Cloud,
+  Sliders,
+  Settings,
+  Info,
+  Layers,
+  History,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { RilcellSettings, ModalAccount, RilcellTransaction, AppTheme, ClearDemoOptions } from '../types';
 import { GOOGLE_APPS_SCRIPT_TEMPLATE, syncAccountsToGoogleSheets, fetchFromGoogleSheets } from '../services/googleSheetsService';
@@ -40,6 +48,7 @@ import {
   syncPresetsToCloud,
   syncCustomersToCloud
 } from '../services/firebase';
+import { APP_VERSION_INFO, checkPWAUpdate } from '../utils/version';
 import { formatRupiah } from '../utils/formatters';
 
 interface SettingsViewProps {
@@ -60,7 +69,7 @@ interface SettingsViewProps {
   onSyncWithGoogleSheets?: () => Promise<void>;
 }
 
-type SettingsSubMenu = 'profil' | 'database' | 'tampilan' | 'data';
+export type SettingsSubMenu = 'profil' | 'database' | 'tampilan' | 'data' | null;
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
@@ -79,7 +88,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenMasterProducts,
   onSyncWithGoogleSheets,
 }) => {
-  const [activeSubMenu, setActiveSubMenu] = useState<SettingsSubMenu>('profil');
+  const [activeSubMenu, setActiveSubMenu] = useState<SettingsSubMenu>(null);
   const [formData, setFormData] = useState<RilcellSettings>(settings);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -99,6 +108,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
   const [cloudSyncToast, setCloudSyncToast] = useState<string | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [updateStatusToast, setUpdateStatusToast] = useState<string | null>(null);
+  const [showChangelogModal, setShowChangelogModal] = useState(false);
+
+  const handleCheckUpdate = async () => {
+    setIsCheckingUpdate(true);
+    setUpdateStatusToast(null);
+    try {
+      const res = await checkPWAUpdate();
+      setUpdateStatusToast(res.message);
+      if (res.hasUpdate) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch {
+      setUpdateStatusToast(`Aplikasi aktif versi v${APP_VERSION_INFO.version}`);
+    } finally {
+      setIsCheckingUpdate(false);
+      setTimeout(() => {
+        setUpdateStatusToast(null);
+      }, 5000);
+    }
+  };
 
   const handleManualCloudSync = async () => {
     setIsCloudSyncing(true);
@@ -202,92 +235,299 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const subMenuItems = [
     {
-      id: 'profil' as SettingsSubMenu,
+      id: 'profil' as const,
       label: 'Profil & Struk',
-      desc: 'Identitas Toko & Kasir',
+      title: 'Identitas Konter & Struk Kasir',
+      desc: 'Nama konter, tagline, WhatsApp, kasir, alamat & footer struk',
       icon: Store,
-      badge: null,
+      color: 'emerald',
+      badge: formData.storeName || 'RILCELL',
     },
     {
-      id: 'database' as SettingsSubMenu,
+      id: 'database' as const,
       label: 'Database & Cloud',
-      desc: 'Firebase Cloud & Sheets',
+      title: 'Database Cloud Firestore & Sheets',
+      desc: 'Koneksi online realtime, sinkron multi-kasir, dan Google Sheets',
       icon: Cloud,
-      badge: 'Realtime',
+      color: 'sky',
+      badge: 'Realtime Cloud',
     },
     {
-      id: 'tampilan' as SettingsSubMenu,
+      id: 'tampilan' as const,
       label: 'Tampilan & Fitur',
-      desc: 'Tema, Saldo & Master',
+      title: 'Tampilan, Saldo & Master Produk',
+      desc: 'Mode gelap/terang, batas saldo minimal, & master produk konter',
       icon: Palette,
-      badge: formData.theme === 'dark' ? 'Dark' : formData.theme === 'light' ? 'Light' : 'Auto',
+      color: 'indigo',
+      badge: formData.theme === 'dark' ? 'Mode Gelap' : formData.theme === 'light' ? 'Mode Terang' : 'Sistem Auto',
     },
     {
-      id: 'data' as SettingsSubMenu,
+      id: 'data' as const,
       label: 'Manajemen Data',
-      desc: 'Backup, Restore & Reset',
+      title: 'Operasional Riil & Backup Data',
+      desc: 'Bersihkan data demo, cadangkan/pulihkan JSON, & reset sistem',
       icon: Database,
-      badge: transactions.length > 0 ? `${transactions.length} Trx` : 'Bersih',
+      color: 'rose',
+      badge: transactions.length > 0 ? `${transactions.length} Trx Tersimpan` : 'Data Bersih',
     },
   ];
 
+  const currentSubMenuInfo = subMenuItems.find(item => item.id === activeSubMenu);
+
   return (
-    <div className="max-w-4xl mx-auto space-y-5 animate-in fade-in duration-200">
+    <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in duration-200">
       {/* Save Success Alert */}
       {saveSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
-          <Check className="w-4 h-4 text-emerald-600" />
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-xs">
+          <Check className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>Pengaturan RILCELL berhasil disimpan!</span>
         </div>
       )}
 
-      {/* Sub-Menu Tabs Navigation */}
-      <div className="bg-white rounded-2xl p-2 border border-slate-200 shadow-xs">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-          {subMenuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeSubMenu === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                id={`tab-settings-${item.id}`}
-                onClick={() => setActiveSubMenu(item.id)}
-                className={`relative flex items-center sm:flex-col sm:items-start p-3 rounded-xl transition-all duration-200 text-left cursor-pointer gap-2.5 sm:gap-2 ${
-                  isActive
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-50/80 hover:bg-slate-100/80 text-slate-700 hover:text-slate-900 border border-transparent'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-slate-600'
-                  }`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  {item.badge && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full hidden sm:inline-block ${
-                      isActive 
-                        ? 'bg-white/20 text-white' 
-                        : 'bg-emerald-100 text-emerald-800'
-                    }`}>
-                      {item.badge}
+      {/* VIEW MODE 1: MAIN MENU (LIST BERJEJER KE BAWAH / SETTINGS HUB) */}
+      {activeSubMenu === null && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Top Store Overview Card */}
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 rounded-2xl p-5 text-white shadow-md border border-slate-700/80">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-inner">
+                  <Store className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-base font-extrabold text-white truncate">
+                      {formData.storeName || 'RILCELL'}
+                    </h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      Online Realtime
                     </span>
-                  )}
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5 truncate">
+                    {formData.tagline || 'Konter Pulsa, Paket Data & PPOB'}
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Kasir: <span className="text-slate-200 font-semibold">{formData.cashierName || 'Kasir RILCELL'}</span> • WA: <span className="font-mono text-slate-200">{formData.phone || '-'}</span>
+                  </p>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <span className={`text-xs font-bold block truncate ${isActive ? 'text-white' : 'text-slate-900'}`}>
-                    {item.label}
-                  </span>
-                  <span className={`text-[10px] block truncate mt-0.5 hidden sm:block ${isActive ? 'text-emerald-100' : 'text-slate-500'}`}>
-                    {item.desc}
-                  </span>
+              </div>
+
+              <div className="hidden sm:block text-right shrink-0">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Total Saldo + Kas</span>
+                <span className="text-sm font-bold text-emerald-400 font-mono">{formatRupiah(totalAllMoney)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section Title */}
+          <div className="flex items-center justify-between px-1 pt-1">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+              Menu Pengaturan & Konfigurasi
+            </h3>
+            <span className="text-[11px] text-slate-400">Pilih menu untuk melihat detail</span>
+          </div>
+
+          {/* List Sub-Menu Berjejer ke Bawah */}
+          <div className="space-y-2.5">
+            {subMenuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.id}
+                  id={`menu-item-${item.id}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setActiveSubMenu(item.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setActiveSubMenu(item.id);
+                    }
+                  }}
+                  className="w-full bg-white hover:bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm group select-none"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs ${
+                      item.color === 'emerald'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : item.color === 'sky'
+                        ? 'bg-sky-100 text-sky-700'
+                        : item.color === 'indigo'
+                        ? 'bg-indigo-100 text-indigo-700'
+                        : 'bg-rose-100 text-rose-700'
+                    }`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                          {item.label}
+                        </h4>
+                        {item.badge && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            item.color === 'emerald'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              : item.color === 'sky'
+                              ? 'bg-sky-50 text-sky-800 border border-sky-200'
+                              : item.color === 'indigo'
+                              ? 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+                              : 'bg-rose-50 text-rose-800 border border-rose-200'
+                          }`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-600 flex items-center justify-center text-slate-400 transition">
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+
+          {/* Quick Action Shortcuts */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            {onOpenMasterProducts && (
+              <button
+                type="button"
+                onClick={onOpenMasterProducts}
+                className="bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left flex items-center justify-between gap-3 transition shadow-xs cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                    <Package className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                      Master Produk & Preset
+                    </h5>
+                    <p className="text-[11px] text-slate-500">
+                      {presetsCount} produk tersimpan
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
               </button>
-            );
-          })}
+            )}
+
+            {onOpenInstallGuide && (
+              <button
+                type="button"
+                onClick={onOpenInstallGuide}
+                className="bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left flex items-center justify-between gap-3 transition shadow-xs cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                    <Smartphone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                      Install Aplikasi HP (PWA)
+                    </h5>
+                    <p className="text-[11px] text-slate-500">
+                      Pasang icon di layar utama
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            )}
+          </div>
+
+          {/* Info Versi & Pembaruan Sistem Card */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                  <Info className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-xs font-bold text-slate-900">
+                      RILCELL Kasir POS
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Versi {APP_VERSION_INFO.version}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono hidden sm:inline-block">
+                      Build {APP_VERSION_INFO.buildCode}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Pembaruan Terakhir: {APP_VERSION_INFO.buildDate}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowChangelogModal(true)}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <History className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Catatan Rilis</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCheckUpdate}
+                  disabled={isCheckingUpdate}
+                  className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+                  <span>{isCheckingUpdate ? 'Memeriksa...' : 'Cek Pembaruan'}</span>
+                </button>
+              </div>
+            </div>
+
+            {updateStatusToast && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-medium text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{updateStatusToast}</span>
+              </div>
+            )}
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Status WebAPK: <strong className="text-slate-600 font-medium">Sinkron Otomatis (Chrome WebAPK)</strong></span>
+              <span className="font-mono">RILCELL POS Engine</span>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* VIEW MODE 2: SUB-MENU DETAIL VIEW WITH NATIVE BACK BUTTON */}
+      {activeSubMenu !== null && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Sub-Menu Header Navigation Bar */}
+          <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-xs flex items-center justify-between gap-3">
+            <button
+              type="button"
+              id="back-to-settings-main-btn"
+              onClick={() => setActiveSubMenu(null)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer group shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-600 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Kembali</span>
+            </button>
+
+            <div className="text-right min-w-0">
+              <h2 className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
+                {currentSubMenuInfo?.title || 'Pengaturan'}
+              </h2>
+              <span className="text-[10px] text-slate-500">Pengaturan RILCELL</span>
+            </div>
+          </div>
 
       {/* SUB MENU 1: PROFIL & STRUK */}
       {activeSubMenu === 'profil' && (
@@ -802,6 +1042,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
       )}
+      </div>
+      )}
 
       {/* Google Apps Script Modal */}
       {showScriptModal && (
@@ -1242,6 +1484,95 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Bersihkan Data Sekarang</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Catatan Rilis & Changelog Modal */}
+      {showChangelogModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setShowChangelogModal(false)}
+        >
+          <div 
+            id="changelog-modal"
+            className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 space-y-5 animate-in zoom-in-95 duration-200 select-none max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-2xs">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">Catatan Pembaruan RILCELL</h3>
+                  <p className="text-xs text-slate-500">Riwayat versi dan fitur aplikasi</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowChangelogModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
+                title="Tutup"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="space-y-4 overflow-y-auto flex-1 pr-1">
+              {/* Version Header Card */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-200/80">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-extrabold text-emerald-950">Versi {APP_VERSION_INFO.version}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">Terbaru</span>
+                  </div>
+                  <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {APP_VERSION_INFO.buildDate}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 mt-2">
+                  Daftar fitur dan peningkatan pada versi ini:
+                </p>
+                <ul className="mt-2.5 space-y-2">
+                  {APP_VERSION_INFO.releaseNotes.map((note, idx) => (
+                    <li key={idx} className="text-xs text-slate-700 flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>{note}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Edukasi WebAPK Android */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-slate-600">
+                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-slate-700" />
+                  <span>Tentang Pembaruan WebAPK di Android:</span>
+                </h4>
+                <p className="text-[11px] leading-relaxed text-slate-600">
+                  Saat diinstal melalui Google Chrome di Android (Xiaomi/MIUI, Samsung, Oppo, dll), sistem Android membuat paket bernama <strong className="text-slate-800 font-semibold font-mono">WebAPK</strong> (seperti <span className="font-mono text-[10px] bg-slate-200 px-1 py-0.5 rounded">org.chromium.webapk...</span>).
+                </p>
+                <p className="text-[11px] leading-relaxed text-slate-600">
+                  Secara berkala, Google Chrome di HP Anda akan memperbarui versi WebAPK di sistem Android secara otomatis di latar belakang saat Anda terhubung ke internet.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-slate-400">RILCELL POS • v{APP_VERSION_INFO.version}</span>
+              <button
+                type="button"
+                onClick={() => setShowChangelogModal(false)}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+              >
+                Tutup Catatan
               </button>
             </div>
           </div>
