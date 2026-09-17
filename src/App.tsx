@@ -636,6 +636,17 @@ export function App() {
     syncSettingsAndCashToCloud(settings, updatedCash);
   };
 
+  // Delete Single Transaction Handler
+  const handleDeleteTransaction = (id: string) => {
+    const target = transactions.find((t) => t.id === id);
+    if (!target) return;
+    if (!window.confirm(`Hapus catatan transaksi ${target.invoiceNumber} (${target.serviceName})?`)) {
+      return;
+    }
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    deleteTransactionFromCloud(id);
+  };
+
   // 3. Transfer Balance / Top-Up Modal Handler (Supports Supplier without deducting internal accounts)
   const handleTransferBalance = (
     transfer: Omit<BalanceTransfer, 'id' | 'timestamp' | 'invoiceNumber'>
@@ -876,6 +887,7 @@ export function App() {
             settings={settings}
             onToggleStatus={handleToggleStatus}
             onSelectReceipt={(trx) => setActiveReceiptTrx(trx)}
+            onDeleteTransaction={handleDeleteTransaction}
           />
         )}
 

@@ -464,6 +464,15 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
                         >
                           <Printer className="w-4 h-4" />
                         </button>
+                        {onDeleteTransaction && (
+                          <button
+                            onClick={() => onDeleteTransaction(trx.id)}
+                            className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition"
+                            title="Hapus Transaksi"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -526,13 +535,13 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
                   <div className="text-[11px] text-slate-500">
                     Modal: {formatRupiah(trx.costPrice)}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleCopyWhatsApp(trx)}
                       className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg transition flex items-center gap-1 text-[11px]"
                     >
                       {copiedId === trx.id ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                      <span>{copiedId === trx.id ? 'Tersalin' : 'WA Struk'}</span>
+                      <span>{copiedId === trx.id ? 'Tersalin' : 'WA'}</span>
                     </button>
                     <button
                       onClick={() => onSelectReceipt(trx)}
@@ -541,6 +550,15 @@ export const TransactionHistoryView: React.FC<TransactionHistoryViewProps> = ({
                       <Printer className="w-3.5 h-3.5" />
                       <span>Cetak</span>
                     </button>
+                    {onDeleteTransaction && (
+                      <button
+                        onClick={() => onDeleteTransaction(trx.id)}
+                        className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition flex items-center justify-center"
+                        title="Hapus Transaksi"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
