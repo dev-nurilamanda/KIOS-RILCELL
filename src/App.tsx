@@ -187,6 +187,51 @@ export function App() {
     localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
   }, [customers]);
 
+  // Apply Theme Mode (light, dark, system)
+  useEffect(() => {
+    const theme = settings.theme || 'system';
+    const root = document.documentElement;
+
+    const applyTheme = () => {
+      let isDark = false;
+      if (theme === 'dark') {
+        isDark = true;
+      } else if (theme === 'light') {
+        isDark = false;
+      } else {
+        isDark = Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      }
+
+      if (isDark) {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+      } else {
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+      }
+
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', isDark ? '#090d16' : '#059669');
+      }
+    };
+
+    applyTheme();
+
+    if (theme === 'system' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyTheme();
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', listener);
+        return () => mediaQuery.removeEventListener('change', listener);
+      } else if (mediaQuery.addListener) {
+        // Fallback for older browsers
+        mediaQuery.addListener(listener);
+        return () => mediaQuery.removeListener(listener);
+      }
+    }
+  }, [settings.theme]);
+
   // Master Preset CRUD Handlers
   const handleAddPreset = (newPresetData: Omit<QuickPresetProduct, 'id'>) => {
     const newPreset: QuickPresetProduct = {
@@ -605,7 +650,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col text-slate-900 pb-20 md:pb-8">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 pb-20 md:pb-8 transition-colors duration-150">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}

@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
-    @apply bg-slate-100 text-slate-900 antialiased selection:bg-emerald-500 selection:text-white min-h-screen;
+    @apply bg-slate-100 text-slate-900 antialiased selection:bg-emerald-500 selection:text-white min-h-screen transition-colors duration-150;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
+  }
+
+  html.dark body {
+    @apply bg-slate-950 text-slate-100 selection:bg-emerald-600 selection:text-white;
   }
 
   input,
@@ -16,6 +22,124 @@
     -webkit-user-select: text;
     user-select: text;
   }
+}
+
+/* Dark Mode Global Surface & Element Styling */
+html.dark .bg-white {
+  background-color: #0f172a;
+}
+
+html.dark .bg-slate-50 {
+  background-color: #1e293b;
+}
+
+html.dark .bg-slate-100 {
+  background-color: #090e1a;
+}
+
+html.dark .bg-slate-200 {
+  background-color: #334155;
+}
+
+html.dark .border-slate-100 {
+  border-color: #1e293b;
+}
+
+html.dark .border-slate-200 {
+  border-color: #1e293b;
+}
+
+html.dark .border-slate-300 {
+  border-color: #334155;
+}
+
+html.dark .text-slate-900 {
+  color: #f8fafc;
+}
+
+html.dark .text-slate-800 {
+  color: #e2e8f0;
+}
+
+html.dark .text-slate-700 {
+  color: #cbd5e1;
+}
+
+html.dark .text-slate-600 {
+  color: #94a3b8;
+}
+
+html.dark .text-slate-500 {
+  color: #64748b;
+}
+
+/* Form controls in dark mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+html.dark select,
+html.dark textarea {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  background-color: #0f172a;
+  border-color: #10b981;
+}
+
+/* Subtle contextual tints in dark mode */
+html.dark .bg-emerald-50 {
+  background-color: rgba(6, 78, 59, 0.25);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+html.dark .text-emerald-900,
+html.dark .text-emerald-800 {
+  color: #6ee7b7;
+}
+
+html.dark .bg-blue-50 {
+  background-color: rgba(30, 58, 138, 0.25);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+html.dark .text-blue-900,
+html.dark .text-blue-800 {
+  color: #93c5fd;
+}
+
+html.dark .bg-amber-50 {
+  background-color: rgba(120, 53, 15, 0.25);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+html.dark .text-amber-900,
+html.dark .text-amber-800 {
+  color: #fcd34d;
+}
+
+html.dark .bg-rose-50 {
+  background-color: rgba(136, 19, 55, 0.25);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+html.dark .text-rose-900,
+html.dark .text-rose-800,
+html.dark .text-rose-700 {
+  color: #fda4af;
+}
+
+/* Header & Mobile navigation bar */
+html.dark header {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: #1e293b !important;
+}
+
+html.dark nav.fixed {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: #1e293b !important;
 }
 
 /* Custom scrollbars */
@@ -32,6 +156,13 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 /* Thermal receipt print rules */

@@ -75,6 +75,8 @@ export interface BalanceTransfer {
   supplierName?: string;
 }
 
+export type AppTheme = 'light' | 'dark' | 'system';
+
 export interface RilcellSettings {
   storeName: string;
   tagline: string;
@@ -86,6 +88,7 @@ export interface RilcellSettings {
   googleAppsScriptUrl: string; // URL Web App Google Apps Script
   autoSyncGoogleSheets: boolean;
   cashOnHand: number; // Saldo kas tunai laci konter
+  theme?: AppTheme; // 'light' | 'dark' | 'system'
 }
 
 export interface QuickPresetProduct {

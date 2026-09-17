@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Store, 
   Database, 
@@ -14,9 +14,16 @@ import {
   AlertTriangle,
   RefreshCw,
   Code,
-  Package
+  Package,
+  Palette,
+  Sun,
+  Moon,
+  Monitor,
+  ChevronRight,
+  Sparkles,
+  X
 } from 'lucide-react';
-import { RilcellSettings, ModalAccount, RilcellTransaction } from '../types';
+import { RilcellSettings, ModalAccount, RilcellTransaction, AppTheme } from '../types';
 import { GOOGLE_APPS_SCRIPT_TEMPLATE, syncAccountsToGoogleSheets, fetchFromGoogleSheets } from '../services/googleSheetsService';
 import { formatRupiah } from '../utils/formatters';
 
@@ -49,10 +56,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 }) => {
   const [formData, setFormData] = useState<RilcellSettings>(settings);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
+  const [themeSavedToast, setThemeSavedToast] = useState<string | null>(null);
   const [isCopyingScript, setIsCopyingScript] = useState(false);
   const [showScriptModal, setShowScriptModal] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+
+  // Keep form data in sync if parent settings change
+  useEffect(() => {
+    setFormData(settings);
+  }, [settings]);
+
+  const handleSelectTheme = (newTheme: AppTheme) => {
+    const updated = { ...formData, theme: newTheme };
+    setFormData(updated);
+    onSaveSettings(updated);
+
+    const themeName = newTheme === 'light' ? 'Mode Terang' : newTheme === 'dark' ? 'Mode Gelap' : 'Ikuti Sistem';
+    setThemeSavedToast(`Tema berhasil diubah ke ${themeName}`);
+    setTimeout(() => setThemeSavedToast(null), 3000);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,6 +220,70 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Main Settings Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Pilihan Tema & Tampilan Antarmuka (Klik untuk Buka Pop-up) */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden transition-all duration-200">
+          <div 
+            id="open-theme-modal-btn"
+            role="button"
+            tabIndex={0}
+            onClick={() => setShowThemeModal(true)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowThemeModal(true); } }}
+            className="w-full p-5 sm:p-6 flex items-center justify-between gap-3 text-left hover:bg-slate-50 cursor-pointer transition-colors duration-150 select-none group"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${
+                formData.theme === 'dark' 
+                  ? 'bg-indigo-100 text-indigo-600' 
+                  : formData.theme === 'light' 
+                  ? 'bg-amber-100 text-amber-600' 
+                  : 'bg-teal-100 text-teal-600'
+              }`}>
+                {formData.theme === 'dark' ? (
+                  <Moon className="w-5 h-5" />
+                ) : formData.theme === 'light' ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Palette className="w-5 h-5" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                    Tema & Tampilan Aplikasi
+                  </h3>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    {formData.theme === 'dark' ? 'Mode Gelap Aktif' : formData.theme === 'light' ? 'Mode Terang Aktif' : 'Ikuti Sistem Aktif'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5 truncate">
+                  Klik untuk membuka pop up pilihan tema: Terang, Gelap, atau Sistem
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition flex items-center gap-1">
+                <Palette className="w-3.5 h-3.5" />
+                <span>Pilih Tema</span>
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition">
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </div>
+          </div>
+
+          {/* Toast Notification when theme is saved */}
+          {themeSavedToast && (
+            <div className="px-5 sm:px-6 pb-4">
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="font-semibold">{themeSavedToast}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Identitas Konter RILCELL */}
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
@@ -441,10 +529,179 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <button
                 type="button"
                 onClick={handleCopyScript}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer"
               >
                 {isCopyingScript ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 <span>{isCopyingScript ? 'Kode Tersalin!' : 'Salin Seluruh Kode'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pop-up Modal Pilihan Tema Tampilan */}
+      {showThemeModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setShowThemeModal(false)}
+        >
+          <div 
+            id="theme-selection-modal"
+            className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 space-y-5 animate-in zoom-in-95 duration-200 select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-2xs">
+                  <Palette className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">Pilih Tema Tampilan</h3>
+                  <p className="text-xs text-slate-500">Sesuaikan mode tampilan antarmuka aplikasi</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                id="close-theme-modal-btn"
+                onClick={() => setShowThemeModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
+                title="Tutup"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Pilihan 3 Tema */}
+            <div className="space-y-3">
+              {/* Mode Terang */}
+              <button
+                type="button"
+                id="modal-theme-light"
+                onClick={() => handleSelectTheme('light')}
+                className={`w-full p-4 rounded-2xl border text-left transition-all duration-150 flex items-center justify-between gap-3.5 cursor-pointer ${
+                  formData.theme === 'light'
+                    ? 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/25 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Sun className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900 block">Mode Terang (Light)</span>
+                      {formData.theme === 'light' && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
+                          Aktif
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-500 block mt-0.5">
+                      Tampilan cerah, bersih, dan kontras tajam untuk siang hari.
+                    </span>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                  formData.theme === 'light'
+                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                    : 'border-slate-300 bg-white'
+                }`}>
+                  {formData.theme === 'light' && <Check className="w-3.5 h-3.5" />}
+                </div>
+              </button>
+
+              {/* Mode Gelap */}
+              <button
+                type="button"
+                id="modal-theme-dark"
+                onClick={() => handleSelectTheme('dark')}
+                className={`w-full p-4 rounded-2xl border text-left transition-all duration-150 flex items-center justify-between gap-3.5 cursor-pointer ${
+                  formData.theme === 'dark'
+                    ? 'border-emerald-500 bg-slate-900 text-white ring-2 ring-emerald-500/25 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Moon className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900 block">Mode Gelap (Dark)</span>
+                      {formData.theme === 'dark' && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
+                          Aktif
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-500 block mt-0.5">
+                      Tampilan gelap nyaman di mata, tidak silau & hemat baterai.
+                    </span>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                  formData.theme === 'dark'
+                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                    : 'border-slate-300 bg-white'
+                }`}>
+                  {formData.theme === 'dark' && <Check className="w-3.5 h-3.5" />}
+                </div>
+              </button>
+
+              {/* Mode Sistem */}
+              <button
+                type="button"
+                id="modal-theme-system"
+                onClick={() => handleSelectTheme('system')}
+                className={`w-full p-4 rounded-2xl border text-left transition-all duration-150 flex items-center justify-between gap-3.5 cursor-pointer ${
+                  formData.theme === 'system' || !formData.theme
+                    ? 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/25 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Monitor className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900 block">Ikuti Sistem (System)</span>
+                      {(formData.theme === 'system' || !formData.theme) && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
+                          Aktif
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-500 block mt-0.5">
+                      Otomatis menyesuaikan mode terang/gelap sesuai setelan perangkat.
+                    </span>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                  formData.theme === 'system' || !formData.theme
+                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                    : 'border-slate-300 bg-white'
+                }`}>
+                  {(formData.theme === 'system' || !formData.theme) && <Check className="w-3.5 h-3.5" />}
+                </div>
+              </button>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+              <span className="text-xs text-slate-500">
+                Pilihan otomatis tersimpan & diterapkan langsung.
+              </span>
+              <button
+                type="button"
+                id="done-theme-modal-btn"
+                onClick={() => setShowThemeModal(false)}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                <span>Selesai</span>
               </button>
             </div>
           </div>

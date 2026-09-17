@@ -110,6 +110,7 @@ export const INITIAL_SETTINGS: RilcellSettings = {
   googleAppsScriptUrl: '',
   autoSyncGoogleSheets: false,
   cashOnHand: 1850000,
+  theme: 'system',
 };
 
 export const QUICK_PRESETS: QuickPresetProduct[] = [
