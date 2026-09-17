@@ -385,7 +385,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-28 md:pb-20 animate-in fade-in duration-200">
+    <div className="max-w-4xl mx-auto space-y-4 pb-40 md:pb-24 animate-in fade-in duration-200">
       {/* Category Pills Switcher - Floating & Sticky at Top under Navbar */}
       <div className="sticky top-[70px] z-30 -mt-1 pt-1.5 pb-2 bg-slate-100/95 backdrop-blur-md transition-all">
         <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-md shadow-slate-900/5 border border-slate-200/90 flex items-center justify-between gap-2.5 sm:gap-3">
@@ -994,42 +994,44 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
         onOpenCustomerManager={onOpenCustomerManager}
       />
 
-      {/* Floating Fixed Bottom Bar for Simpan & Catat Transaksi (Mengambang & Tetap di Layar) */}
-      <div className="fixed bottom-[68px] md:bottom-4 left-0 right-0 z-35 px-3 sm:px-6 pointer-events-none transition-all">
-        <div className="max-w-4xl mx-auto pointer-events-auto">
-          <div className="bg-slate-900/95 text-white backdrop-blur-md p-3 sm:p-3.5 rounded-2xl border border-slate-800 shadow-xl shadow-slate-950/25 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-              <div className="bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700/60 shrink-0">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-tight">
-                  Total Bayar
+      {/* Floating Capsule Bottom Bar for Simpan & Catat Transaksi (Bentuk Kapsul Mengambang & Bebas Scrolling) */}
+      <div className="fixed bottom-[88px] md:bottom-6 left-0 right-0 z-35 px-3 sm:px-6 pointer-events-none transition-all">
+        <div className="max-w-3xl mx-auto pointer-events-auto">
+          <div className="bg-slate-950/95 text-white backdrop-blur-lg p-2 sm:p-2.5 sm:px-4 rounded-full border border-slate-700/80 shadow-2xl shadow-slate-950/40 flex items-center justify-between gap-2.5 sm:gap-4 ring-1 ring-white/10">
+            {/* Total Bayar Info Pill */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="bg-slate-900/90 pl-3.5 pr-4 py-1.5 sm:py-2 rounded-full border border-slate-800 flex items-center gap-2.5 shrink-0">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block leading-tight">
+                  Total
                 </span>
-                <span className="text-base sm:text-lg font-black text-emerald-400 leading-tight">
+                <span className="text-sm sm:text-base font-black text-emerald-400 leading-tight">
                   {numSell > 0 ? formatRupiah(numSell) : 'Rp 0'}
                 </span>
               </div>
 
               {isBalanceInsufficient ? (
-                <span className="text-[11px] font-bold text-rose-300 bg-rose-950/80 border border-rose-800/60 px-2.5 py-1 rounded-lg truncate">
-                  Saldo modal kurang!
+                <span className="text-[10px] sm:text-[11px] font-bold text-rose-300 bg-rose-950/80 border border-rose-800/60 px-2.5 py-1 rounded-full truncate">
+                  Saldo kurang!
                 </span>
               ) : (
-                <div className="hidden sm:block text-xs text-slate-300 truncate font-medium">
+                <div className="hidden sm:block text-xs text-slate-300 truncate font-medium max-w-[200px]">
                   {isPhysical
                     ? (serviceName ? `${serviceName} (${quantity} pcs)` : 'Voucher Fisik')
-                    : (targetNumber.trim() ? `No: ${targetNumber}` : 'Siap dicatat')}
+                    : (targetNumber.trim() ? `Tujuan: ${targetNumber}` : 'Siap catat')}
                 </div>
               )}
             </div>
 
+            {/* Submit Button Capsule */}
             <button
               id="btn-submit-quick-entry"
               form="quick-entry-form"
               type="submit"
               disabled={isBalanceInsufficient}
-              className="bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black py-2.5 sm:py-3 px-5 sm:px-7 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition cursor-pointer shrink-0"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black py-2.5 sm:py-3 px-4.5 sm:px-7 rounded-full text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all duration-150 cursor-pointer shrink-0"
             >
               <span>Simpan & Catat Transaksi</span>
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+              <ArrowRight className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" />
             </button>
           </div>
         </div>
