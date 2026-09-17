@@ -60,6 +60,8 @@ interface SettingsViewProps {
   onSyncWithGoogleSheets?: () => Promise<void>;
 }
 
+type SettingsSubMenu = 'profil' | 'database' | 'tampilan' | 'data';
+
 export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   accounts,
@@ -77,6 +79,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenMasterProducts,
   onSyncWithGoogleSheets,
 }) => {
+  const [activeSubMenu, setActiveSubMenu] = useState<SettingsSubMenu>('profil');
   const [formData, setFormData] = useState<RilcellSettings>(settings);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -197,494 +200,608 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     reader.readAsText(file);
   };
 
+  const subMenuItems = [
+    {
+      id: 'profil' as SettingsSubMenu,
+      label: 'Profil & Struk',
+      desc: 'Identitas Toko & Kasir',
+      icon: Store,
+      badge: null,
+    },
+    {
+      id: 'database' as SettingsSubMenu,
+      label: 'Database & Cloud',
+      desc: 'Firebase Cloud & Sheets',
+      icon: Cloud,
+      badge: 'Realtime',
+    },
+    {
+      id: 'tampilan' as SettingsSubMenu,
+      label: 'Tampilan & Fitur',
+      desc: 'Tema, Saldo & Master',
+      icon: Palette,
+      badge: formData.theme === 'dark' ? 'Dark' : formData.theme === 'light' ? 'Light' : 'Auto',
+    },
+    {
+      id: 'data' as SettingsSubMenu,
+      label: 'Manajemen Data',
+      desc: 'Backup, Restore & Reset',
+      icon: Database,
+      badge: transactions.length > 0 ? `${transactions.length} Trx` : 'Bersih',
+    },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-200">
+    <div className="max-w-4xl mx-auto space-y-5 animate-in fade-in duration-200">
       {/* Save Success Alert */}
       {saveSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
           <Check className="w-4 h-4 text-emerald-600" />
           <span>Pengaturan RILCELL berhasil disimpan!</span>
         </div>
       )}
 
-      {/* Google Firebase Cloud Firestore Integration Card */}
-      <div className="bg-gradient-to-br from-teal-950 via-slate-900 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-md border border-teal-800/40 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/30">
-              <Cloud className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <span>Database Online Google Firebase (Firestore)</span>
-                </h3>
-                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Terhubung & Realtime
-                </span>
-              </div>
-              <p className="text-xs text-slate-300 mt-0.5">
-                Semua transaksi, 8 akun saldo, kas laci, dan data pelanggan otomatis tersimpan permanen di Cloud Firestore & tersinkron multi-perangkat.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            disabled={isCloudSyncing}
-            onClick={handleManualCloudSync}
-            className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shrink-0 shadow-xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isCloudSyncing ? 'animate-spin' : ''}`} />
-            <span>{isCloudSyncing ? 'Menyinkronkan...' : 'Sinkronkan Ulang ke Cloud'}</span>
-          </button>
-        </div>
-
-        {cloudSyncToast && (
-          <div className="text-xs p-3 rounded-xl bg-teal-900/60 border border-teal-700/50 text-teal-200 flex items-center gap-2">
-            <span>{cloudSyncToast}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-teal-900/50 text-xs">
-          <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
-            <span className="text-[10px] text-slate-400 block font-medium">Status Koneksi</span>
-            <span className="text-xs font-bold text-emerald-400">Aktif & Offline-First</span>
-          </div>
-          <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
-            <span className="text-[10px] text-slate-400 block font-medium">Model Penyimpanan</span>
-            <span className="text-xs font-bold text-teal-300">Firestore Cloud DB</span>
-          </div>
-          <div className="col-span-2 sm:col-span-1 bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
-            <span className="text-[10px] text-slate-400 block font-medium">Multi-Kasir</span>
-            <span className="text-xs font-bold text-white">Sinkron Otomatis</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Google Sheets Database Integration Card */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-md border border-slate-700 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-              <FileSpreadsheet className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <span>Integrasi Database Google Sheets</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300">
-                  Cloud Backend
-                </span>
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Simpan seluruh transaksi konter dan mutasi saldo modal langsung ke spreadsheet Google Drive Anda.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setShowScriptModal(true)}
-            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0"
-          >
-            <Code className="w-4 h-4" />
-            <span>Lihat Script Google Apps Script</span>
-          </button>
-        </div>
-
-        {/* Input Google Apps Script URL */}
-        <div className="space-y-2 pt-2 border-t border-slate-800">
-          <label className="text-xs font-bold text-slate-300 block">
-            Google Apps Script Web App URL (Deployment /exec):
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="url"
-              placeholder="https://script.google.com/macros/s/AKfycbx.../exec"
-              value={formData.googleAppsScriptUrl}
-              onChange={(e) => setFormData({ ...formData, googleAppsScriptUrl: e.target.value })}
-              className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
-            />
-            <button
-              type="button"
-              disabled={isSyncing}
-              onClick={handleTestGoogleSheetsSync}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Sinkronisasi...' : 'Tes & Sinkronkan'}</span>
-            </button>
-          </div>
-
-          {syncStatus && (
-            <div className="text-xs p-2.5 rounded-lg bg-slate-800 text-slate-300 font-mono mt-2">
-              {syncStatus}
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 mt-2">
-            <input
-              type="checkbox"
-              id="autoSync"
-              checked={formData.autoSyncGoogleSheets}
-              onChange={(e) => setFormData({ ...formData, autoSyncGoogleSheets: e.target.checked })}
-              className="rounded border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4 bg-slate-800"
-            />
-            <label htmlFor="autoSync" className="text-xs text-slate-300 cursor-pointer">
-              Otomatis kirim setiap transaksi baru ke Google Sheets (Fallback otomatis ke LocalStorage jika offline)
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Settings Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Pilihan Tema & Tampilan Antarmuka (Klik untuk Buka Pop-up) */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden transition-all duration-200">
-          <div 
-            id="open-theme-modal-btn"
-            role="button"
-            tabIndex={0}
-            onClick={() => setShowThemeModal(true)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowThemeModal(true); } }}
-            className="w-full p-5 sm:p-6 flex items-center justify-between gap-3 text-left hover:bg-slate-50 cursor-pointer transition-colors duration-150 select-none group"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${
-                formData.theme === 'dark' 
-                  ? 'bg-indigo-100 text-indigo-600' 
-                  : formData.theme === 'light' 
-                  ? 'bg-amber-100 text-amber-600' 
-                  : 'bg-teal-100 text-teal-600'
-              }`}>
-                {formData.theme === 'dark' ? (
-                  <Moon className="w-5 h-5" />
-                ) : formData.theme === 'light' ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Palette className="w-5 h-5" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
-                    Tema & Tampilan Aplikasi
-                  </h3>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <Sparkles className="w-3 h-3 text-emerald-600" />
-                    {formData.theme === 'dark' ? 'Mode Gelap Aktif' : formData.theme === 'light' ? 'Mode Terang Aktif' : 'Ikuti Sistem Aktif'}
+      {/* Sub-Menu Tabs Navigation */}
+      <div className="bg-white rounded-2xl p-2 border border-slate-200 shadow-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {subMenuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeSubMenu === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                id={`tab-settings-${item.id}`}
+                onClick={() => setActiveSubMenu(item.id)}
+                className={`relative flex items-center sm:flex-col sm:items-start p-3 rounded-xl transition-all duration-200 text-left cursor-pointer gap-2.5 sm:gap-2 ${
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-50/80 hover:bg-slate-100/80 text-slate-700 hover:text-slate-900 border border-transparent'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-slate-600'
+                  }`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  {item.badge && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full hidden sm:inline-block ${
+                      isActive 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className={`text-xs font-bold block truncate ${isActive ? 'text-white' : 'text-slate-900'}`}>
+                    {item.label}
+                  </span>
+                  <span className={`text-[10px] block truncate mt-0.5 hidden sm:block ${isActive ? 'text-emerald-100' : 'text-slate-500'}`}>
+                    {item.desc}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5 truncate">
-                  Klik untuk membuka pop up pilihan tema: Terang, Gelap, atau Sistem
-                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* SUB MENU 1: PROFIL & STRUK */}
+      {activeSubMenu === 'profil' && (
+        <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <Store className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Identitas Konter RILCELL</h3>
+                <p className="text-xs text-slate-500">Nama konter dan informasi kontak yang tampil di struk dan nota WhatsApp</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition flex items-center gap-1">
-                <Palette className="w-3.5 h-3.5" />
-                <span>Pilih Tema</span>
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition">
-                <ChevronRight className="w-4 h-4" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Nama Konter / Toko</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.storeName}
+                  onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Tagline Layanan</label>
+                <input
+                  type="text"
+                  value={formData.tagline}
+                  onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp Konter</label>
+                <input
+                  type="text"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Nama Kasir Bertugas</label>
+                <input
+                  type="text"
+                  value={formData.cashierName}
+                  onChange={(e) => setFormData({ ...formData, cashierName: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 mb-1">Alamat Konter</label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 mb-1">Catatan Kaki Struk (Receipt Footer)</label>
+                <input
+                  type="text"
+                  value={formData.receiptFooter}
+                  onChange={(e) => setFormData({ ...formData, receiptFooter: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                />
               </div>
             </div>
           </div>
 
-          {/* Toast Notification when theme is saved */}
-          {themeSavedToast && (
-            <div className="px-5 sm:px-6 pb-4">
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="font-semibold">{themeSavedToast}</span>
+          {/* Submit Save Button */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 transition cursor-pointer"
+            >
+              <Save className="w-4 h-4" />
+              <span>Simpan Profil Konter</span>
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* SUB MENU 2: DATABASE & CLOUD */}
+      {activeSubMenu === 'database' && (
+        <div className="space-y-5 animate-in fade-in duration-200">
+          {/* Google Firebase Cloud Firestore Integration Card */}
+          <div className="bg-gradient-to-br from-teal-950 via-slate-900 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-md border border-teal-800/40 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/30">
+                  <Cloud className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>Database Online Google Firebase (Firestore)</span>
+                    </h3>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      Terhubung & Realtime
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Semua transaksi, 8 akun saldo, kas laci, dan data pelanggan otomatis tersimpan permanen di Cloud Firestore & tersinkron multi-perangkat.
+                  </p>
+                </div>
               </div>
+
+              <button
+                type="button"
+                disabled={isCloudSyncing}
+                onClick={handleManualCloudSync}
+                className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shrink-0 shadow-xs cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isCloudSyncing ? 'animate-spin' : ''}`} />
+                <span>{isCloudSyncing ? 'Menyinkronkan...' : 'Sinkronkan Ulang ke Cloud'}</span>
+              </button>
+            </div>
+
+            {cloudSyncToast && (
+              <div className="text-xs p-3 rounded-xl bg-teal-900/60 border border-teal-700/50 text-teal-200 flex items-center gap-2">
+                <span>{cloudSyncToast}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-teal-900/50 text-xs">
+              <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
+                <span className="text-[10px] text-slate-400 block font-medium">Status Koneksi</span>
+                <span className="text-xs font-bold text-emerald-400">Aktif & Offline-First</span>
+              </div>
+              <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
+                <span className="text-[10px] text-slate-400 block font-medium">Model Penyimpanan</span>
+                <span className="text-xs font-bold text-teal-300">Firestore Cloud DB</span>
+              </div>
+              <div className="col-span-2 sm:col-span-1 bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
+                <span className="text-[10px] text-slate-400 block font-medium">Multi-Kasir</span>
+                <span className="text-xs font-bold text-white">Sinkron Otomatis</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Google Sheets Database Integration Card */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-md border border-slate-700 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>Integrasi Opsional Google Sheets</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300">
+                      Ekspor / Backup
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Salin seluruh transaksi konter langsung ke spreadsheet Google Drive Anda secara paralel.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowScriptModal(true)}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+              >
+                <Code className="w-4 h-4" />
+                <span>Lihat Script GAS</span>
+              </button>
+            </div>
+
+            {/* Input Google Apps Script URL */}
+            <div className="space-y-2 pt-2 border-t border-slate-800">
+              <label className="text-xs font-bold text-slate-300 block">
+                Google Apps Script Web App URL (Deployment /exec):
+              </label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="url"
+                  placeholder="https://script.google.com/macros/s/AKfycbx.../exec"
+                  value={formData.googleAppsScriptUrl}
+                  onChange={(e) => {
+                    const updated = { ...formData, googleAppsScriptUrl: e.target.value };
+                    setFormData(updated);
+                    onSaveSettings(updated);
+                  }}
+                  className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+                />
+                <button
+                  type="button"
+                  disabled={isSyncing}
+                  onClick={handleTestGoogleSheetsSync}
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>{isSyncing ? 'Sinkronisasi...' : 'Tes & Sinkronkan'}</span>
+                </button>
+              </div>
+
+              {syncStatus && (
+                <div className="text-xs p-2.5 rounded-lg bg-slate-800 text-slate-300 font-mono mt-2">
+                  {syncStatus}
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  id="autoSync"
+                  checked={formData.autoSyncGoogleSheets}
+                  onChange={(e) => {
+                    const updated = { ...formData, autoSyncGoogleSheets: e.target.checked };
+                    setFormData(updated);
+                    onSaveSettings(updated);
+                  }}
+                  className="rounded border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4 bg-slate-800 cursor-pointer"
+                />
+                <label htmlFor="autoSync" className="text-xs text-slate-300 cursor-pointer">
+                  Otomatis kirim setiap transaksi baru ke Google Sheets
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUB MENU 3: TAMPILAN & FITUR */}
+      {activeSubMenu === 'tampilan' && (
+        <div className="space-y-5 animate-in fade-in duration-200">
+          {/* Pilihan Tema & Tampilan Antarmuka */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden transition-all duration-200">
+            <div 
+              id="open-theme-modal-btn"
+              role="button"
+              tabIndex={0}
+              onClick={() => setShowThemeModal(true)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowThemeModal(true); } }}
+              className="w-full p-5 sm:p-6 flex items-center justify-between gap-3 text-left hover:bg-slate-50 cursor-pointer transition-colors duration-150 select-none group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${
+                  formData.theme === 'dark' 
+                    ? 'bg-indigo-100 text-indigo-600' 
+                    : formData.theme === 'light' 
+                    ? 'bg-amber-100 text-amber-600' 
+                    : 'bg-teal-100 text-teal-600'
+                }`}>
+                  {formData.theme === 'dark' ? (
+                    <Moon className="w-5 h-5" />
+                  ) : formData.theme === 'light' ? (
+                    <Sun className="w-5 h-5" />
+                  ) : (
+                    <Palette className="w-5 h-5" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                      Tema & Tampilan Aplikasi
+                    </h3>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <Sparkles className="w-3 h-3 text-emerald-600" />
+                      {formData.theme === 'dark' ? 'Mode Gelap Aktif' : formData.theme === 'light' ? 'Mode Terang Aktif' : 'Ikuti Sistem Aktif'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5 truncate">
+                    Klik untuk membuka pop up pilihan tema: Terang, Gelap, atau Sistem
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition flex items-center gap-1">
+                  <Palette className="w-3.5 h-3.5" />
+                  <span>Pilih Tema</span>
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
+            {/* Toast Notification when theme is saved */}
+            {themeSavedToast && (
+              <div className="px-5 sm:px-6 pb-4">
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold">{themeSavedToast}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Ambang Peringatan Saldo Menipis */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Batas Peringatan Saldo Menipis</h3>
+                <p className="text-xs text-slate-500">Tampilkan notifikasi merah saat saldo modal akun di bawah batas ini</p>
+              </div>
+            </div>
+
+            <div className="max-w-xs">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Batas Saldo Minimal (Rupiah):
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">Rp</span>
+                <input
+                  type="number"
+                  step="10000"
+                  value={formData.lowBalanceThreshold}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10) || 100000;
+                    const updated = { ...formData, lowBalanceThreshold: val };
+                    setFormData(updated);
+                    onSaveSettings(updated);
+                  }}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Master Produk & Preset Shortcut Card */}
+          {onOpenMasterProducts && (
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900">Master Produk & Preset Cepat</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                      {presetsCount} Produk Tersimpan
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Atur daftar produk langganan, harga modal, harga jual, dan server saldo default untuk input transaksi otomatis.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenMasterProducts}
+                className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+              >
+                <Package className="w-4 h-4 text-emerald-400" />
+                <span>Buka Master Produk</span>
+              </button>
+            </div>
+          )}
+
+          {/* PWA Mobile Installation Card */}
+          {onOpenInstallGuide && (
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-5 rounded-2xl border border-emerald-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Install Aplikasi Kasir RILCELL di HP</h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Pasang aplikasi di layar utama Android atau iPhone tanpa Play Store untuk akses cepat layar penuh.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenInstallGuide}
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Lihat Panduan & QR Code</span>
+              </button>
             </div>
           )}
         </div>
-
-        {/* Identitas Konter RILCELL */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-            <Store className="w-5 h-5 text-emerald-600" />
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Identitas Konter RILCELL</h3>
-              <p className="text-xs text-slate-500">Nama konter dan informasi kontak yang tampil di struk dan WhatsApp</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Nama Konter / Toko</label>
-              <input
-                type="text"
-                required
-                value={formData.storeName}
-                onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Tagline Layanan</label>
-              <input
-                type="text"
-                value={formData.tagline}
-                onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp Konter</label>
-              <input
-                type="text"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Nama Kasir Bertugas</label>
-              <input
-                type="text"
-                value={formData.cashierName}
-                onChange={(e) => setFormData({ ...formData, cashierName: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 mb-1">Alamat Konter</label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 mb-1">Catatan Kaki Struk</label>
-              <input
-                type="text"
-                value={formData.receiptFooter}
-                onChange={(e) => setFormData({ ...formData, receiptFooter: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Ambang Peringatan Saldo Menipis */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-            <AlertTriangle className="w-5 h-5 text-amber-500" />
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Batas Peringatan Saldo Menipis</h3>
-              <p className="text-xs text-slate-500">Tampilkan notifikasi merah saat saldo modal di bawah batas ini</p>
-            </div>
-          </div>
-
-          <div className="max-w-xs">
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Batas Saldo Minimal (Rupiah):
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">Rp</span>
-              <input
-                type="number"
-                step="10000"
-                value={formData.lowBalanceThreshold}
-                onChange={(e) => setFormData({ ...formData, lowBalanceThreshold: parseInt(e.target.value, 10) || 100000 })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Save Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 transition"
-          >
-            <Save className="w-4 h-4" />
-            <span>Simpan Pengaturan</span>
-          </button>
-        </div>
-      </form>
-
-      {/* Master Produk & Preset Shortcut Card */}
-      {onOpenMasterProducts && (
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200">
-              <Package className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-900">Master Produk & Preset Cepat</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                  {presetsCount} Produk Tersimpan
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Atur daftar produk langganan, harga modal, harga jual, dan server saldo default untuk input transaksi otomatis.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onOpenMasterProducts}
-            className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 shrink-0"
-          >
-            <Package className="w-4 h-4 text-emerald-400" />
-            <span>Buka Master Produk</span>
-          </button>
-        </div>
       )}
 
-      {/* PWA Mobile Installation Card */}
-      {onOpenInstallGuide && (
-        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-5 rounded-2xl border border-emerald-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
-              <Smartphone className="w-5 h-5" />
+      {/* SUB MENU 4: MANAJEMEN DATA */}
+      {activeSubMenu === 'data' && (
+        <div className="space-y-5 animate-in fade-in duration-200">
+          {/* Operasional Data Riil & Pembersihan Data Demo Card */}
+          <div className="bg-gradient-to-br from-white via-rose-50/20 to-amber-50/30 rounded-2xl p-5 sm:p-6 border border-rose-200/90 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-rose-100">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Eraser className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-bold text-slate-900">Operasional Data Riil & Bersihkan Demo</h3>
+                    {transactions.length === 0 ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        Siap Operasi Riil (Data Bersih)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        <AlertCircle className="w-3 h-3 text-amber-600" />
+                        Tersedia {transactions.length} Transaksi Simulasi
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Hapus transaksi contoh, pelanggan demo, dan nolkan saldo modal agar konter Anda mulai mencatat pembukuan asli dari nol.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                id="open-clear-demo-modal-btn"
+                onClick={() => setShowClearDemoModal(true)}
+                className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Bersihkan Data Demo</span>
+              </button>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Install Aplikasi Kasir RILCELL di HP</h3>
-              <p className="text-xs text-slate-600 mt-0.5">
-                Pasang aplikasi di layar utama Android atau iPhone tanpa Play Store untuk akses cepat layar penuh.
-              </p>
+
+            {/* Ringkasan Status Data Saat Ini */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+              <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                <span className="text-[11px] text-slate-500 block font-medium">Riwayat Transaksi</span>
+                <span className="text-sm font-bold text-slate-900">{transactions.length} Trx</span>
+              </div>
+              <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                <span className="text-[11px] text-slate-500 block font-medium">Buku Pelanggan</span>
+                <span className="text-sm font-bold text-slate-900">{customersCount} Kontak</span>
+              </div>
+              <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                <span className="text-[11px] text-slate-500 block font-medium">Riwayat Mutasi Saldo</span>
+                <span className="text-sm font-bold text-slate-900">{transfersCount} Log</span>
+              </div>
+              <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                <span className="text-[11px] text-slate-500 block font-medium">Total Saldo + Kas</span>
+                <span className="text-sm font-bold text-slate-900 truncate">{formatRupiah(totalAllMoney)}</span>
+              </div>
+            </div>
+
+            {/* Toast Notifikasi Sukses Pembersihan */}
+            {clearDemoSuccessToast && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="font-semibold">{clearDemoSuccessToast}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Backup & Restore JSON Data */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                <Database className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Cadangkan & Pulihkan Data Lokal (JSON)</h3>
+                <p className="text-xs text-slate-500">Ekspor atau impor seluruh data transaksi dan saldo konter Anda secara mandiri</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={onExportAllData}
+                className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-slate-200 cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-slate-600" />
+                <span>Cadangkan (Unduh JSON)</span>
+              </button>
+
+              <label className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-slate-200 cursor-pointer text-center">
+                <Upload className="w-4 h-4 text-slate-600" />
+                <span>Pulihkan (Unggah JSON)</span>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileImport}
+                  className="hidden"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Apakah Anda yakin ingin mengatur ulang data kembali ke data contoh bawaan?')) {
+                    onResetToDemo();
+                  }
+                }}
+                className="px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-rose-200 cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Reset ke Data Demo</span>
+              </button>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onOpenInstallGuide}
-            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 shrink-0"
-          >
-            <Smartphone className="w-4 h-4" />
-            <span>Lihat Panduan & QR Code</span>
-          </button>
         </div>
       )}
-
-      {/* Operasional Data Riil & Pembersihan Data Demo Card */}
-      <div className="bg-gradient-to-br from-white via-rose-50/20 to-amber-50/30 rounded-2xl p-5 sm:p-6 border border-rose-200/90 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-rose-100">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
-              <Eraser className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-bold text-slate-900">Operasional Data Riil & Bersihkan Data Demo</h3>
-                {transactions.length === 0 ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                    Siap Operasi Riil (Data Bersih)
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                    <AlertCircle className="w-3 h-3 text-amber-600" />
-                    Tersedia {transactions.length} Transaksi Simulasi
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-600 mt-0.5">
-                Hapus transaksi contoh, pelanggan demo, dan nolkan saldo modal agar konter Anda mulai mencatat pembukuan asli dari nol.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            id="open-clear-demo-modal-btn"
-            onClick={() => setShowClearDemoModal(true)}
-            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>Bersihkan Data Demo</span>
-          </button>
-        </div>
-
-        {/* Ringkasan Status Data Saat Ini */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <span className="text-[11px] text-slate-500 block font-medium">Riwayat Transaksi</span>
-            <span className="text-sm font-bold text-slate-900">{transactions.length} Trx</span>
-          </div>
-          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <span className="text-[11px] text-slate-500 block font-medium">Buku Pelanggan</span>
-            <span className="text-sm font-bold text-slate-900">{customersCount} Kontak</span>
-          </div>
-          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <span className="text-[11px] text-slate-500 block font-medium">Riwayat Mutasi Saldo</span>
-            <span className="text-sm font-bold text-slate-900">{transfersCount} Log</span>
-          </div>
-          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <span className="text-[11px] text-slate-500 block font-medium">Total Saldo + Kas</span>
-            <span className="text-sm font-bold text-slate-900 truncate">{formatRupiah(totalAllMoney)}</span>
-          </div>
-        </div>
-
-        {/* Toast Notifikasi Sukses Pembersihan */}
-        {clearDemoSuccessToast && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
-            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="font-semibold">{clearDemoSuccessToast}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Backup & Restore JSON Data */}
-      <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
-        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-          <Database className="w-5 h-5 text-slate-600" />
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">Cadangkan & Pulihkan Data Lokal (JSON)</h3>
-            <p className="text-xs text-slate-500">Ekspor atau impor seluruh data transaksi dan saldo konter Anda secara mandiri</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <button
-            type="button"
-            onClick={onExportAllData}
-            className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-slate-200"
-          >
-            <Download className="w-4 h-4" />
-            <span>Cadangkan Data (Unduh JSON)</span>
-          </button>
-
-          <label className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-slate-200 cursor-pointer text-center">
-            <Upload className="w-4 h-4" />
-            <span>Pulihkan Data (Unggah JSON)</span>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleFileImport}
-              className="hidden"
-            />
-          </label>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm('Apakah Anda yakin ingin mengatur ulang data kembali ke data contoh bawaan?')) {
-                onResetToDemo();
-              }
-            }}
-            className="px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-rose-200"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Reset ke Data Demo</span>
-          </button>
-        </div>
-      </div>
 
       {/* Google Apps Script Modal */}
       {showScriptModal && (
