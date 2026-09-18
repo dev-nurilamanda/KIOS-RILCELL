@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { 
   Zap, 
   Wallet, 
@@ -6,7 +7,6 @@ import {
   BarChart3, 
   Settings, 
   Smartphone, 
-  AlertTriangle, 
   Clock, 
   UserCheck,
   Package,
@@ -250,30 +250,56 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation Bar: Enlarged, Roomy & Ergonomic */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-3 py-2.5 flex items-center justify-around">
-        {mobileBottomNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              id={`mobile-bottom-nav-${item.id}`}
-              onClick={() => setActiveTab(item.id)}
-              className={`relative flex flex-col items-center justify-center py-1.5 px-3.5 rounded-2xl transition-all duration-150 active:scale-95 cursor-pointer ${
-                isActive ? 'text-emerald-700 font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'
-              }`}
-            >
-              <div className={`p-2 rounded-2xl transition-all ${isActive ? 'bg-emerald-100 text-emerald-700 shadow-2xs' : 'text-slate-500'}`}>
-                <Icon className={`w-6 h-6 ${isActive ? 'text-emerald-700 stroke-[2.5]' : 'text-slate-500 stroke-[1.8]'}`} />
-              </div>
-              <span className={`text-[12px] mt-1 tracking-tight ${isActive ? 'font-extrabold text-emerald-800' : 'text-slate-600 font-semibold'}`}>
-                {item.shortLabel}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+      {/* Mobile Floating Capsule Bottom Navigation Bar */}
+      <div className="md:hidden fixed bottom-3.5 inset-x-3.5 max-w-sm sm:max-w-md mx-auto z-40 pointer-events-none">
+        <nav 
+          aria-label="Navigasi Utama Bawah"
+          className="pointer-events-auto bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-xl border border-white/15 dark:border-white/10 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.4),0_4px_16px_rgba(0,0,0,0.2)] rounded-full p-1.5 flex items-center justify-between ring-1 ring-black/10"
+        >
+          {mobileBottomNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <motion.button
+                key={item.id}
+                id={`mobile-bottom-nav-${item.id}`}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                whileTap={{ scale: 0.88 }}
+                whileHover={{ scale: 1.04 }}
+                className={`relative flex-1 flex flex-col items-center justify-center py-2 px-2 rounded-full transition-colors cursor-pointer select-none min-h-[50px] ${
+                  isActive ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {/* Smooth Sliding Pill Indicator */}
+                {isActive && (
+                  <motion.div
+                    layoutId="floatingCapsuleActiveBg"
+                    className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full shadow-md shadow-emerald-900/50 border border-emerald-400/30"
+                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                  />
+                )}
+
+                {/* Animated Icon & Label */}
+                <motion.div 
+                  className="relative z-10 flex flex-col items-center gap-0.5"
+                  animate={isActive ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                >
+                  <Icon className={`w-5 h-5 transition-transform duration-150 ${
+                    isActive ? 'text-amber-300 stroke-[2.4] drop-shadow-xs' : 'text-slate-400 stroke-[1.8]'
+                  }`} />
+                  <span className={`text-[11px] tracking-tight leading-none ${
+                    isActive ? 'font-black text-white' : 'font-medium text-slate-400'
+                  }`}>
+                    {item.shortLabel}
+                  </span>
+                </motion.div>
+              </motion.button>
+            );
+          })}
+        </nav>
+      </div>
     </>
   );
 };

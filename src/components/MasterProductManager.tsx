@@ -5,7 +5,6 @@ import {
   Search, 
   Edit3, 
   Trash2, 
-  RotateCcw, 
   Sparkles, 
   Check, 
   X, 
@@ -37,7 +36,7 @@ interface MasterProductManagerProps {
   onAddPreset: (preset: Omit<QuickPresetProduct, 'id'>) => void;
   onUpdatePreset: (id: string, preset: Partial<QuickPresetProduct>) => void;
   onDeletePreset: (id: string) => void;
-  onResetPresets: () => void;
+  onResetPresets?: () => void;
   onClearAllPresets?: () => void;
   onSelectPresetToTransact?: (preset: QuickPresetProduct) => void;
 }
@@ -273,27 +272,12 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
                   }
                 }}
                 className="p-2.5 sm:px-3.5 sm:py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 border border-rose-200 shrink-0 cursor-pointer h-11"
-                title="Hapus / Kosongkan semua produk demo"
+                title="Hapus / Kosongkan semua produk"
               >
                 <Trash2 className="w-4 h-4 text-rose-600" />
                 <span className="hidden sm:inline">Hapus Semua</span>
               </button>
             )}
-
-            {/* Tombol Reload Data */}
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm('Kembalikan / Muat ulang daftar produk ke data bawaan standar?')) {
-                  onResetPresets();
-                }
-              }}
-              className="p-2.5 sm:px-3.5 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 border border-slate-200/70 shrink-0 cursor-pointer h-11"
-              title="Muat ulang produk bawaan"
-            >
-              <RotateCcw className="w-4 h-4 text-slate-600" />
-              <span className="hidden sm:inline">Muat Bawaan</span>
-            </button>
 
             {/* Tombol Tambah Produk Baru */}
             <button
@@ -352,7 +336,7 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
             </p>
             <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
               {presets.length === 0
-                ? 'Daftar master produk telah kosong dan bersih. Anda dapat mendaftarkan produk baru atau memuat kembali produk bawaan.'
+                ? 'Daftar master produk telah kosong dan bersih. Klik tombol di bawah untuk mulai mendaftarkan produk riil konter Anda.'
                 : 'Coba ubah kata kunci pencarian atau pilih kategori lain.'}
             </p>
           </div>
@@ -360,21 +344,11 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
             <button
               type="button"
               onClick={openAddModal}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 stroke-[3]" />
               <span>Tambah Produk Baru</span>
             </button>
-            {presets.length === 0 && (
-              <button
-                type="button"
-                onClick={onResetPresets}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition cursor-pointer flex items-center gap-1.5"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Muat Bawaan</span>
-              </button>
-            )}
           </div>
         </div>
       ) : (

@@ -67,6 +67,7 @@ interface SettingsViewProps {
   onClearDemoData?: (options: ClearDemoOptions) => void;
   onOpenInstallGuide?: () => void;
   onOpenMasterProducts?: () => void;
+  onResetPresets?: () => void;
   onSyncWithGoogleSheets?: () => Promise<void>;
 }
 
@@ -87,6 +88,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onClearDemoData,
   onOpenInstallGuide,
   onOpenMasterProducts,
+  onResetPresets,
   onSyncWithGoogleSheets,
 }) => {
   const [activeSubMenu, setActiveSubMenu] = useState<SettingsSubMenu>(null);
@@ -96,6 +98,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [themeSavedToast, setThemeSavedToast] = useState<string | null>(null);
   const [showClearDemoModal, setShowClearDemoModal] = useState(false);
   const [clearDemoSuccessToast, setClearDemoSuccessToast] = useState<string | null>(null);
+  const [resetPresetsToast, setResetPresetsToast] = useState<string | null>(null);
   const [clearOptions, setClearOptions] = useState<ClearDemoOptions>({
     clearTransactions: true,
     clearTransfers: true,
@@ -885,14 +888,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={onOpenMasterProducts}
-                className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
-              >
-                <Package className="w-4 h-4 text-emerald-400" />
-                <span>Buka Master Produk</span>
-              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {onResetPresets && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm('Kembalikan / Muat ulang daftar master produk ke data bawaan standar? Seluruh produk paket data, pulsa, dan token PLN contoh akan dimuat kembali ke sistem.')) {
+                        onResetPresets();
+                        setResetPresetsToast('Master produk bawaan standar berhasil dimuat ulang!');
+                        setTimeout(() => setResetPresetsToast(null), 3000);
+                      }
+                    }}
+                    className="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl font-bold text-xs border border-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    title="Muat ulang produk template standar bawaan"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Muat Bawaan</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onOpenMasterProducts}
+                  className="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+                >
+                  <Package className="w-4 h-4 text-emerald-400" />
+                  <span>Buka Produk</span>
+                </button>
+              </div>
             </div>
           )}
 
@@ -990,6 +1012,65 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span className="font-semibold">{clearDemoSuccessToast}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Master Produk Standar & Template Bawaan Card */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900">Master Produk Bawaan Standar</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                      {presetsCount} Produk Aktif
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Pulihkan atau muat ulang daftar template paket data, pulsa, token PLN, e-wallet, dan produk konter ke standar bawaan.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {onOpenMasterProducts && (
+                  <button
+                    type="button"
+                    onClick={onOpenMasterProducts}
+                    className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Package className="w-4 h-4 text-slate-600" />
+                    <span>Lihat Produk</span>
+                  </button>
+                )}
+                {onResetPresets && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm('Kembalikan / Muat ulang daftar master produk ke data bawaan standar? Seluruh paket data, pulsa, dan token PLN contoh akan dimuat kembali ke sistem dan database.')) {
+                        onResetPresets();
+                        setResetPresetsToast('Master produk bawaan standar berhasil dimuat ulang!');
+                        setTimeout(() => setResetPresetsToast(null), 3000);
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Muat Produk Bawaan</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Toast Notifikasi Reset Produk Bawaan */}
+            {resetPresetsToast && (
+              <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-800 flex items-center gap-2 animate-in fade-in duration-200">
+                <Check className="w-4 h-4 text-indigo-600 shrink-0" />
+                <span className="font-semibold">{resetPresetsToast}</span>
               </div>
             )}
           </div>
