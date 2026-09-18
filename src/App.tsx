@@ -849,7 +849,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 pb-28 md:pb-8 transition-colors duration-150">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 transition-colors duration-150">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -863,7 +863,7 @@ export function App() {
       />
 
       {/* Main Content Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-6 pb-28 md:pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-3 sm:pt-6 pb-24 md:pb-8">
         {activeTab === 'entry' && (
           <div className="w-full max-w-4xl mx-auto">
             <QuickEntryForm

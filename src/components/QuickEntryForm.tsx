@@ -409,9 +409,9 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-2.5 sm:space-y-3 pb-6 animate-in fade-in duration-200">
+    <div className="max-w-3xl mx-auto space-y-2 sm:space-y-3 pb-1 sm:pb-2 animate-in fade-in duration-200">
       {/* Category Capsule Bar - Sticky Non-Scrolling Pin under Navbar */}
-      <div className="sticky top-[68px] sm:top-[70px] z-30 pt-1 pb-1.5 -mt-1 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md transition-all">
+      <div className="sticky top-[68px] sm:top-[70px] z-30 pt-0.5 pb-1 -mt-1 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md transition-all">
         <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-1.5 sm:p-2 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 sm:gap-2">
           {/* Scroll Left Button */}
           <button
