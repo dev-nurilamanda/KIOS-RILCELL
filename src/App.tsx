@@ -11,9 +11,12 @@ import {
   ClearDemoOptions
 } from './types';
 import { 
-  INITIAL_MODAL_ACCOUNTS, 
-  INITIAL_SETTINGS, 
-  INITIAL_TRANSACTIONS,
+  DEFAULT_OPERATIONAL_ACCOUNTS, 
+  DEFAULT_OPERATIONAL_SETTINGS,
+  DEMO_MODAL_ACCOUNTS,
+  DEMO_SETTINGS,
+  DEMO_TRANSACTIONS,
+  DEMO_CUSTOMERS,
   QUICK_PRESETS,
   INITIAL_CUSTOMERS
 } from './data/initialData';
@@ -43,6 +46,10 @@ import {
   syncPresetsToCloud,
   syncCustomersToCloud,
   syncSettingsAndCashToCloud,
+  clearAllTransactionsFromCloud,
+  clearAllTransfersFromCloud,
+  clearAllCustomersFromCloud,
+  clearAllPresetsFromCloud,
   fetchAllFromCloud
 } from './services/firebase';
 
@@ -60,7 +67,7 @@ export function App() {
   // Navigation
   const [activeTab, setActiveTab] = useState<RilcellNavTab>('entry');
 
-  // Accounts State
+  // Accounts State (Defaults to 0 balance for clean real store operations)
   const [accounts, setAccounts] = useState<ModalAccount[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
@@ -71,28 +78,28 @@ export function App() {
     } catch (e) {
       console.error('Error loading accounts:', e);
     }
-    return INITIAL_MODAL_ACCOUNTS;
+    return DEFAULT_OPERATIONAL_ACCOUNTS;
   });
 
-  // Transactions State
+  // Transactions State (Defaults to clean empty list)
   const [transactions, setTransactions] = useState<RilcellTransaction[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.error('Error loading transactions:', e);
     }
-    return INITIAL_TRANSACTIONS;
+    return [];
   });
 
-  // Transfers History State
+  // Transfers History State (Defaults to clean empty list)
   const [transferHistory, setTransferHistory] = useState<BalanceTransfer[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.TRANSFERS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
@@ -112,10 +119,10 @@ export function App() {
     } catch (e) {
       console.error('Error loading settings:', e);
     }
-    return INITIAL_SETTINGS;
+    return DEFAULT_OPERATIONAL_SETTINGS;
   });
 
-  // Cash on Hand State
+  // Cash on Hand State (Defaults to 0)
   const [cashOnHand, setCashOnHand] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CASH);
@@ -126,16 +133,16 @@ export function App() {
     } catch (e) {
       console.error('Error loading cash on hand:', e);
     }
-    return INITIAL_SETTINGS.cashOnHand;
+    return 0;
   });
 
   // Master Presets State (Product Presets)
   const [presets, setPresets] = useState<QuickPresetProduct[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.PRESETS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.error('Error loading presets:', e);
@@ -146,18 +153,18 @@ export function App() {
   // Selected Preset to auto-fill into transaction form
   const [selectedPresetToFill, setSelectedPresetToFill] = useState<QuickPresetProduct | null>(null);
 
-  // Customers Database State
+  // Customers Database State (Defaults to clean empty list)
   const [customers, setCustomers] = useState<CustomerRecord[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.error('Error loading customers:', e);
     }
-    return INITIAL_CUSTOMERS;
+    return [];
   });
 
   const [selectedCustomerToFill, setSelectedCustomerToFill] = useState<{
@@ -194,39 +201,36 @@ export function App() {
       if (!isMounted || !cloudData) return;
       setIsCloudSynced(true);
 
-      if (cloudData.transactions && cloudData.transactions.length > 0) {
-        setTransactions(cloudData.transactions);
-      } else if (transactions.length > 0) {
-        syncAllTransactionsToCloud(transactions);
-      }
-
-      if (cloudData.accounts && cloudData.accounts.length > 0) {
-        setAccounts(cloudData.accounts);
-      } else if (accounts.length > 0) {
+      if (cloudData.isCloudConfigured) {
+        // Cloud has existing data records
+        if (cloudData.transactions !== null) {
+          setTransactions(cloudData.transactions);
+        }
+        if (cloudData.accounts && cloudData.accounts.length > 0) {
+          setAccounts(cloudData.accounts);
+        }
+        if (cloudData.transfers !== null) {
+          setTransferHistory(cloudData.transfers);
+        }
+        if (cloudData.presets !== null) {
+          setPresets(cloudData.presets);
+        }
+        if (cloudData.customers !== null) {
+          setCustomers(cloudData.customers);
+        }
+        if (cloudData.settings) {
+          setSettings((prev) => ({ ...prev, ...cloudData.settings }));
+        }
+        if (typeof cloudData.cashOnHand === 'number') {
+          setCashOnHand(cloudData.cashOnHand);
+        }
+      } else {
+        // Initial clean boot - sync clean initial structure without injecting demo transactions
         syncAccountsToCloud(accounts);
-      }
-
-      if (cloudData.transfers && cloudData.transfers.length > 0) {
-        setTransferHistory(cloudData.transfers);
-      }
-
-      if (cloudData.presets && cloudData.presets.length > 0) {
-        setPresets(cloudData.presets);
-      } else if (presets.length > 0) {
-        syncPresetsToCloud(presets);
-      }
-
-      if (cloudData.customers && cloudData.customers.length > 0) {
-        setCustomers(cloudData.customers);
-      } else if (customers.length > 0) {
-        syncCustomersToCloud(customers);
-      }
-
-      if (cloudData.settings) {
-        setSettings((prev) => ({ ...prev, ...cloudData.settings }));
-      }
-      if (typeof cloudData.cashOnHand === 'number') {
-        setCashOnHand(cloudData.cashOnHand);
+        syncSettingsAndCashToCloud(settings, cashOnHand);
+        if (presets.length > 0) {
+          syncPresetsToCloud(presets);
+        }
       }
     });
 
@@ -766,41 +770,70 @@ export function App() {
     }
   };
 
-  const handleResetToDemo = () => {
-    setAccounts(INITIAL_MODAL_ACCOUNTS);
-    setTransactions(INITIAL_TRANSACTIONS);
+  const handleResetToDemo = async () => {
+    setAccounts(DEMO_MODAL_ACCOUNTS);
+    setTransactions(DEMO_TRANSACTIONS);
     setTransferHistory([]);
-    setSettings(INITIAL_SETTINGS);
-    setCashOnHand(INITIAL_SETTINGS.cashOnHand);
+    setSettings(DEMO_SETTINGS);
+    setCashOnHand(DEMO_SETTINGS.cashOnHand);
     setPresets(QUICK_PRESETS);
-    setCustomers(INITIAL_CUSTOMERS);
+    setCustomers(DEMO_CUSTOMERS);
+
+    localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(DEMO_MODAL_ACCOUNTS));
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(DEMO_TRANSACTIONS));
+    localStorage.setItem(STORAGE_KEYS.TRANSFERS, '[]');
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(DEMO_SETTINGS));
+    localStorage.setItem(STORAGE_KEYS.CASH, String(DEMO_SETTINGS.cashOnHand));
+    localStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(QUICK_PRESETS));
+    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(DEMO_CUSTOMERS));
+
+    await Promise.all([
+      syncAllTransactionsToCloud(DEMO_TRANSACTIONS),
+      syncAccountsToCloud(DEMO_MODAL_ACCOUNTS),
+      syncSettingsAndCashToCloud(DEMO_SETTINGS, DEMO_SETTINGS.cashOnHand),
+      syncPresetsToCloud(QUICK_PRESETS),
+      syncCustomersToCloud(DEMO_CUSTOMERS),
+      clearAllTransfersFromCloud(),
+    ]);
   };
 
   // 8. Clear Demo Data for Real Operational Readiness
-  const handleClearDemoData = (options: ClearDemoOptions) => {
+  const handleClearDemoData = async (options: ClearDemoOptions) => {
     if (options.clearTransactions) {
       setTransactions([]);
+      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, '[]');
+      await clearAllTransactionsFromCloud();
     }
     if (options.clearTransfers) {
       setTransferHistory([]);
+      localStorage.setItem(STORAGE_KEYS.TRANSFERS, '[]');
+      await clearAllTransfersFromCloud();
     }
     if (options.clearCustomers) {
       setCustomers([]);
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, '[]');
+      await clearAllCustomersFromCloud();
     }
     if (options.resetBalancesToZero) {
-      setAccounts((prev) =>
-        prev.map((acc) => ({
-          ...acc,
-          balance: 0,
-          initialBalance: 0,
-          updatedAt: Date.now(),
-        }))
-      );
+      const zeroAccs = accounts.map((acc) => ({
+        ...acc,
+        balance: 0,
+        initialBalance: 0,
+        updatedAt: Date.now(),
+      }));
+      setAccounts(zeroAccs);
       setCashOnHand(0);
+      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(zeroAccs));
+      localStorage.setItem(STORAGE_KEYS.CASH, '0');
+      await syncAccountsToCloud(zeroAccs);
+      await syncSettingsAndCashToCloud(settings, 0);
     }
     if (options.clearPresets) {
       setPresets([]);
+      localStorage.setItem(STORAGE_KEYS.PRESETS, '[]');
+      await clearAllPresetsFromCloud();
     }
+    await syncSettingsAndCashToCloud(settings, options.resetBalancesToZero ? 0 : cashOnHand);
   };
 
   return (

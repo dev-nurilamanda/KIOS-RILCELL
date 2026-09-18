@@ -101,6 +101,40 @@ export const deleteTransactionFromCloud = async (transactionId: string) => {
   }
 };
 
+// Clear entire collection from Cloud Firestore
+export const clearCollectionFromCloud = async (collectionName: string) => {
+  try {
+    const snapshot = await getDocs(collection(db, collectionName));
+    if (snapshot.empty) return true;
+
+    const batch = writeBatch(db);
+    snapshot.docs.forEach((docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.warn(`Error clearing cloud collection ${collectionName}:`, error);
+    return false;
+  }
+};
+
+export const clearAllTransactionsFromCloud = async () => {
+  return clearCollectionFromCloud(COLLECTIONS.TRANSACTIONS);
+};
+
+export const clearAllTransfersFromCloud = async () => {
+  return clearCollectionFromCloud(COLLECTIONS.TRANSFERS);
+};
+
+export const clearAllCustomersFromCloud = async () => {
+  return clearCollectionFromCloud(COLLECTIONS.CUSTOMERS);
+};
+
+export const clearAllPresetsFromCloud = async () => {
+  return clearCollectionFromCloud(COLLECTIONS.PRESETS);
+};
+
 export const syncAccountsToCloud = async (accounts: ModalAccount[]) => {
   try {
     const batch = writeBatch(db);
@@ -187,10 +221,13 @@ export const fetchAllFromCloud = async () => {
     const customers = cusSnap.docs.map((d) => d.data() as CustomerRecord);
     const settingsDoc = setSnap.docs.find((d) => d.id === 'config')?.data() as (RilcellSettings & { cashOnHand?: number }) | undefined;
 
+    const isCloudConfigured = !setSnap.empty || !accSnap.empty || !trxSnap.empty;
+
     return {
-      transactions: transactions.length > 0 ? transactions.sort((a, b) => b.timestamp - a.timestamp) : null,
+      isCloudConfigured,
+      transactions: transactions.sort((a, b) => b.timestamp - a.timestamp),
       accounts: accounts.length > 0 ? accounts : null,
-      transfers: transfers.length > 0 ? transfers.sort((a, b) => b.timestamp - a.timestamp) : null,
+      transfers: transfers.sort((a, b) => b.timestamp - a.timestamp),
       presets: presets.length > 0 ? presets : null,
       customers: customers.length > 0 ? customers : null,
       settings: settingsDoc || null,

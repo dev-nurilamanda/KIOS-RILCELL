@@ -1,6 +1,121 @@
 import { ModalAccount, RilcellSettings, QuickPresetProduct, RilcellTransaction, CustomerRecord } from '../types';
 
-export const INITIAL_MODAL_ACCOUNTS: ModalAccount[] = [
+// Clean Operational Accounts (Zero Balances) for Real Production Store
+export const DEFAULT_OPERATIONAL_ACCOUNTS: ModalAccount[] = [
+  {
+    id: 'wekios',
+    name: 'WeKios',
+    category: 'server_pulsa',
+    balance: 0,
+    initialBalance: 0,
+    color: 'from-amber-500 to-orange-600',
+    minAlertThreshold: 100000,
+    accountNumber: 'WK-89021',
+    holderName: 'RILCELL KONTER',
+    updatedAt: Date.now(),
+  },
+  {
+    id: 'digipos',
+    name: 'DigiPOS Aja!',
+    category: 'server_pulsa',
+    balance: 0,
+    initialBalance: 0,
+    color: 'from-red-500 to-rose-700',
+    minAlertThreshold: 100000,
+    accountNumber: 'DP-08123490',
+    holderName: 'RILCELL OUTLET',
+    updatedAt: Date.now(),
+  },
+  {
+    id: 'dana',
+    name: 'DANA',
+    category: 'ewallet',
+    balance: 0,
+    initialBalance: 0,
+    color: 'from-sky-500 to-blue-600',
+    minAlertThreshold: 100000,
+    accountNumber: '0812-3456-7890',
+    holderName: 'RILCELL DANA BISNIS',
+    updatedAt: Date.now(),
+  },
+  {
+    id: 'gopay',
+    name: 'GoPay',
+    category: 'ewallet',
+    balance: 0,
+    initialBalance: 0,
+    color: 'from-emerald-500 to-teal-600',
+    minAlertThreshold: 100000,
+    accountNumber: '0812-3456-7890',
+    holderName: 'RILCELL GOPAY',
+    updatedAt: Date.now(),
+  },
+  {
+    id: 'shopeepay',
+    name: 'ShopeePay',
+    category: 'ewallet',
+    balance: 0,
+    initialBalance: 0,
+    color: 'from-orange-500 to-amber-600',
+    minAlertThreshold: 100000,
+    accountNumber: '0812-3456-7890',
+    holderName: 'RILCELL SHOPEE',
+    updatedAt: Date.now(),
+  },
+  {
+    id: 'ovo',
+    name: 'OVO',
+    category: 'ewallet',
+    balance: 0,
+    initialBalance: 0,
+    color: 'from-purple-600 to-indigo-700',
+    minAlertThreshold: 100000,
+    accountNumber: '0812-3456-7890',
+    holderName: 'RILCELL PREMIER',
+    updatedAt: Date.now(),
+  },
+  {
+    id: 'gopay_merchant',
+    name: 'GoPay Merchant',
+    category: 'merchant',
+    balance: 0,
+    initialBalance: 0,
+    color: 'from-cyan-600 to-blue-700',
+    minAlertThreshold: 100000,
+    accountNumber: 'MID-881902',
+    holderName: 'KONTER RILCELL QRIS',
+    updatedAt: Date.now(),
+  },
+  {
+    id: 'bsi_byond',
+    name: 'BYOND by BSI',
+    category: 'bank',
+    balance: 0,
+    initialBalance: 0,
+    color: 'from-teal-600 to-emerald-800',
+    minAlertThreshold: 200000,
+    accountNumber: '719-204-8891',
+    holderName: 'RILCELL BYOND BSI',
+    updatedAt: Date.now(),
+  },
+];
+
+export const DEFAULT_OPERATIONAL_SETTINGS: RilcellSettings = {
+  storeName: 'RILCELL',
+  tagline: 'Pulsa, Paket Data, Token PLN, E-Wallet & Transfer Bank',
+  address: 'Jl. Utama Pasar No. 12, Konter RILCELL',
+  phone: '0812-3456-7890',
+  cashierName: 'Kasir RILCELL',
+  lowBalanceThreshold: 100000,
+  receiptFooter: 'Terima kasih atas kunjungan Anda! Simpan struk ini sebagai bukti pembayaran yang sah.',
+  googleAppsScriptUrl: '',
+  autoSyncGoogleSheets: false,
+  cashOnHand: 0,
+  theme: 'system',
+};
+
+// Demo/Mock Data (Used only when user explicitly clicks "Muat Data Demo")
+export const DEMO_MODAL_ACCOUNTS: ModalAccount[] = [
   {
     id: 'wekios',
     name: 'WeKios',
@@ -53,7 +168,7 @@ export const INITIAL_MODAL_ACCOUNTS: ModalAccount[] = [
     id: 'shopeepay',
     name: 'ShopeePay',
     category: 'ewallet',
-    balance: 95000, // Menipis for demo alert!
+    balance: 95000,
     initialBalance: 400000,
     color: 'from-orange-500 to-amber-600',
     minAlertThreshold: 100000,
@@ -99,7 +214,7 @@ export const INITIAL_MODAL_ACCOUNTS: ModalAccount[] = [
   },
 ];
 
-export const INITIAL_SETTINGS: RilcellSettings = {
+export const DEMO_SETTINGS: RilcellSettings = {
   storeName: 'RILCELL',
   tagline: 'Pulsa, Paket Data, Token PLN, E-Wallet & Transfer Bank',
   address: 'Jl. Utama Pasar No. 12, Konter RILCELL',
@@ -112,6 +227,10 @@ export const INITIAL_SETTINGS: RilcellSettings = {
   cashOnHand: 1850000,
   theme: 'system',
 };
+
+// Aliases for compatibility
+export const INITIAL_MODAL_ACCOUNTS = DEFAULT_OPERATIONAL_ACCOUNTS;
+export const INITIAL_SETTINGS = DEFAULT_OPERATIONAL_SETTINGS;
 
 export const QUICK_PRESETS: QuickPresetProduct[] = [
   // Pulsa & Data
@@ -505,4 +624,7 @@ export const INITIAL_CUSTOMERS: CustomerRecord[] = [
     updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 3,
   },
 ];
+
+export const DEMO_TRANSACTIONS: RilcellTransaction[] = INITIAL_TRANSACTIONS;
+export const DEMO_CUSTOMERS: CustomerRecord[] = INITIAL_CUSTOMERS;
 
