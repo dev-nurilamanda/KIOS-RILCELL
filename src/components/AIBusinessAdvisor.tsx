@@ -170,7 +170,18 @@ export const AIBusinessAdvisor: React.FC<AIBusinessAdvisorProps> = ({
         }),
       });
 
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseErr) {
+        throw new Error(
+          res.status === 404 || res.status === 502
+            ? 'Layanan AI backend sedang diinisialisasi, silakan coba kirim ulang.'
+            : responseText.slice(0, 120) || 'Gagal memproses format jawaban server.'
+        );
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Terjadi kesalahan saat memproses jawaban.');
       }
@@ -212,7 +223,14 @@ export const AIBusinessAdvisor: React.FC<AIBusinessAdvisorProps> = ({
         }),
       });
 
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error(responseText.slice(0, 120) || 'Format respons tidak valid.');
+      }
+
       if (data.reply) {
         setQuickAnalysisReport(data.reply);
         const assistantMessage: ChatMessage = {
