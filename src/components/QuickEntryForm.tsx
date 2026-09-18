@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion } from 'motion/react';
 import { 
   Zap, 
   Smartphone, 
@@ -24,6 +25,8 @@ import {
   UserPlus,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   FileText
 } from 'lucide-react';
 import { 
@@ -114,6 +117,14 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   const [destinationAccountId, setDestinationAccountId] = useState<AccountKey>('gopay_merchant');
 
   const targetInputRef = useRef<HTMLInputElement>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -240 : 240;
+      categoryScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   // Dynamic labels and placeholders based on category
   const targetFieldLabel = useMemo(() => {
@@ -157,6 +168,14 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
     const catConfig = CATEGORY_ITEMS.find((c) => c.id === cat);
     const newProfitType = catConfig?.defaultProfitType || 'standard_margin';
     setProfitType(newProfitType);
+
+    // Auto-scroll the selected category capsule into center view
+    setTimeout(() => {
+      const el = document.getElementById(`cat-capsule-${cat}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }, 50);
 
     // Reset quantity and unit prices for clean slate
     setQuantity(1);
@@ -391,40 +410,81 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
 
   return (
     <div className="max-w-3xl mx-auto space-y-2.5 sm:space-y-3 pb-6 animate-in fade-in duration-200">
-      {/* Category Pills Switcher - Ultra-Slim Single Line Bar */}
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 shadow-2xs border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
-          {CATEGORY_ITEMS.map((cat) => {
-            const isActive = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => handleCategoryChange(cat.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap transition-all duration-150 cursor-pointer ${
-                  isActive
-                    ? 'bg-emerald-600 text-white shadow-xs scale-[1.02]'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <span className="text-sm leading-none">{cat.icon}</span>
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {onOpenMasterProducts && (
+      {/* Category Capsule Bar - Sticky Non-Scrolling Pin under Navbar */}
+      <div className="sticky top-[68px] sm:top-[70px] z-30 pt-1 pb-1.5 -mt-1 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md transition-all">
+        <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-1.5 sm:p-2 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 sm:gap-2">
+          {/* Scroll Left Button */}
           <button
             type="button"
-            onClick={onOpenMasterProducts}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-700 rounded-lg text-xs font-bold transition shrink-0 border border-slate-200 dark:border-slate-700 cursor-pointer"
-            title="Kelola Daftar Produk"
+            onClick={() => scrollCategories('left')}
+            className="hidden sm:flex w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 items-center justify-center shrink-0 transition cursor-pointer"
+            aria-label="Geser ke kiri"
           >
-            <Package className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Produk</span>
+            <ChevronLeft className="w-4 h-4" />
           </button>
-        )}
+
+          {/* Categories Horizontal Scroll List */}
+          <div 
+            ref={categoryScrollRef}
+            className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-0.5 px-0.5"
+          >
+            {CATEGORY_ITEMS.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <motion.button
+                  key={cat.id}
+                  id={`cat-capsule-${cat.id}`}
+                  type="button"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`relative flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm whitespace-nowrap min-w-[135px] sm:min-w-[155px] justify-center transition-colors cursor-pointer select-none border ${
+                    isActive
+                      ? 'text-white border-emerald-600 shadow-md shadow-emerald-600/20'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-700/80'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeCategoryCapsule"
+                      className="absolute inset-0 bg-emerald-600 rounded-2xl -z-10 shadow-sm"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <span className={`p-1.5 rounded-xl transition-colors ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-slate-700 text-emerald-700 dark:text-emerald-400'
+                  }`}>
+                    {cat.icon}
+                  </span>
+                  <span className="tracking-tight">{cat.label}</span>
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* Scroll Right Button */}
+          <button
+            type="button"
+            onClick={() => scrollCategories('right')}
+            className="hidden sm:flex w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 items-center justify-center shrink-0 transition cursor-pointer"
+            aria-label="Geser ke kanan"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          {onOpenMasterProducts && (
+            <button
+              type="button"
+              onClick={onOpenMasterProducts}
+              className="hidden md:flex items-center gap-2 px-3.5 py-2.5 bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-300 rounded-2xl text-xs font-bold transition shrink-0 border border-slate-200 dark:border-slate-700 cursor-pointer"
+              title="Kelola Master Produk"
+            >
+              <Package className="w-4 h-4 text-emerald-600" />
+              <span>Produk</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Ultra-Compact POS Card */}
