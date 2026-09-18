@@ -33,6 +33,7 @@ import { InstallGuideModal } from './components/InstallGuideModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { TransferModal } from './components/TransferModal';
 import { WhatsNewModal } from './components/WhatsNewModal';
+import { AIBusinessAdvisorModal } from './components/AIBusinessAdvisorModal';
 import { UpdateNotificationBanner } from './components/UpdateNotificationBanner';
 import { isNewVersionAvailable } from './utils/version';
 import { generateInvoiceNumber } from './utils/formatters';
@@ -178,6 +179,7 @@ export function App() {
   // Modals State
   const [activeReceiptTrx, setActiveReceiptTrx] = useState<RilcellTransaction | null>(null);
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
+  const [isAIAdvisorModalOpen, setIsAIAdvisorModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isEditCashModalOpen, setIsEditCashModalOpen] = useState(false);
   const [tempCashInput, setTempCashInput] = useState('');
@@ -860,6 +862,7 @@ export function App() {
         presetsCount={presets.length}
         customersCount={customers.length}
         onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
+        onOpenAIAgent={() => setIsAIAdvisorModalOpen(true)}
       />
 
       {/* Main Content Body */}
@@ -1041,6 +1044,16 @@ export function App() {
         isOpen={isWhatsNewOpen}
         onClose={() => setIsWhatsNewOpen(false)}
         isAutoPrompt={true}
+      />
+
+      {/* RILCELL AI Business Advisor Modal */}
+      <AIBusinessAdvisorModal
+        isOpen={isAIAdvisorModalOpen}
+        onClose={() => setIsAIAdvisorModalOpen(false)}
+        transactions={transactions}
+        accounts={accounts}
+        cashOnHand={cashOnHand}
+        customers={customers}
       />
 
       {/* Background Service Worker Update Banner */}

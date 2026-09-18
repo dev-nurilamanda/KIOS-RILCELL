@@ -24,6 +24,8 @@ interface AIBusinessAdvisorProps {
   accounts: ModalAccount[];
   cashOnHand: number;
   customers?: CustomerRecord[];
+  isModalMode?: boolean;
+  onCloseModal?: () => void;
 }
 
 interface ChatMessage {
@@ -38,6 +40,8 @@ export const AIBusinessAdvisor: React.FC<AIBusinessAdvisorProps> = ({
   accounts,
   cashOnHand,
   customers = [],
+  isModalMode = false,
+  onCloseModal,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -254,7 +258,13 @@ export const AIBusinessAdvisor: React.FC<AIBusinessAdvisorProps> = ({
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col h-[650px] sm:h-[720px]">
+    <div
+      className={`bg-white dark:bg-slate-900 overflow-hidden flex flex-col ${
+        isModalMode
+          ? 'h-[80vh] max-h-[750px] rounded-none'
+          : 'rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs h-[650px] sm:h-[720px]'
+      }`}
+    >
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-4 sm:p-5 text-white flex items-center justify-between gap-3 shrink-0 border-b border-indigo-900/50">
         <div className="flex items-center gap-3">
