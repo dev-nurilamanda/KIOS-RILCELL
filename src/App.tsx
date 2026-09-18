@@ -942,6 +942,7 @@ export function App() {
             transactions={transactions}
             accounts={accounts}
             cashOnHand={cashOnHand}
+            customers={customers}
           />
         )}
 
