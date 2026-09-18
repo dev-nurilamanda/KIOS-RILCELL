@@ -79,23 +79,40 @@ TUGAS & KARAKTERISTIK ANDA:
 
     formattedContents += `${prompt}${contextText}`;
 
-    // Use gemini-2.5-flash for maximum responsiveness and reliability
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: formattedContents,
-      config: {
-        systemInstruction,
-        temperature: 0.7,
-      },
-    });
+    let reply = '';
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+    let lastError: any = null;
 
-    const reply = response.text || 'Maaf, belum dapat menghasilkan analisis saat ini.';
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: formattedContents,
+          config: {
+            systemInstruction,
+            temperature: 0.7,
+          },
+        });
+        if (response.text) {
+          reply = response.text;
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Attempt with ${modelName} failed:`, err?.message || err);
+        // Continue to try next model alias
+      }
+    }
 
-    return res.json({ success: true, reply });
+    if (!reply && lastError) {
+      throw lastError;
+    }
+
+    return res.json({ success: true, reply: reply || 'Maaf, belum dapat menghasilkan analisis saat ini.' });
   } catch (error: any) {
     console.error('Error generating AI business analysis:', error);
     return res.status(500).json({
-      error: error.message || 'Gagal memproses analisis AI. Pastikan GEMINI_API_KEY valid.',
+      error: error.message || 'Gagal memproses analisis AI. Silakan coba lagi.',
     });
   }
 });
