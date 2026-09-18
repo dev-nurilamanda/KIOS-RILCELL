@@ -21,7 +21,10 @@ import {
   QrCode,
   Users,
   UserCheck,
-  UserPlus
+  UserPlus,
+  ChevronDown,
+  ChevronUp,
+  FileText
 } from 'lucide-react';
 import { 
   ServiceCategory, 
@@ -100,6 +103,8 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   const [activeAutoFillPreset, setActiveAutoFillPreset] = useState<string | null>(null);
   const [matchedPresetId, setMatchedPresetId] = useState<string | null>(null);
   const [isCustomerPickerOpen, setIsCustomerPickerOpen] = useState(false);
+
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
 
   // Custom Form Fields State (Quantity, Payment Method & Destination Account)
   const [quantity, setQuantity] = useState<number>(1);
@@ -385,529 +390,388 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-52 md:pb-24 animate-in fade-in duration-200">
-      {/* Category Pills Switcher - Floating & Sticky at Top under Navbar */}
-      <div className="sticky top-[70px] z-30 -mt-1 pt-1.5 pb-2 bg-slate-100/95 backdrop-blur-md transition-all">
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-md shadow-slate-900/5 border border-slate-200/90 flex items-center justify-between gap-2.5 sm:gap-3">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 py-1">
-            {CATEGORY_ITEMS.map((cat) => {
-              const isActive = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleCategoryChange(cat.id)}
-                  className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all duration-150 cursor-pointer ${
-                    isActive
-                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-[1.02]'
-                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className="text-base sm:text-lg leading-none">{cat.icon}</span>
-                  <span>{cat.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {onOpenMasterProducts && (
-            <button
-              type="button"
-              onClick={onOpenMasterProducts}
-              className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 border border-slate-200 cursor-pointer"
-              title="Kelola Daftar Produk"
-            >
-              <Package className="w-4.5 h-4.5 text-emerald-600" />
-              <span>Daftar Produk</span>
-            </button>
-          )}
+    <div className="max-w-3xl mx-auto space-y-2.5 sm:space-y-3 pb-6 animate-in fade-in duration-200">
+      {/* Category Pills Switcher - Ultra-Slim Single Line Bar */}
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl p-1.5 shadow-2xs border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+          {CATEGORY_ITEMS.map((cat) => {
+            const isActive = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => handleCategoryChange(cat.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-xs scale-[1.02]'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span className="text-sm leading-none">{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
         </div>
+
+        {onOpenMasterProducts && (
+          <button
+            type="button"
+            onClick={onOpenMasterProducts}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-700 rounded-lg text-xs font-bold transition shrink-0 border border-slate-200 dark:border-slate-700 cursor-pointer"
+            title="Kelola Daftar Produk"
+          >
+            <Package className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Produk</span>
+          </button>
+        )}
       </div>
 
-      {/* Main Entry Form Card */}
-      <div className="bg-white rounded-2xl p-5 sm:p-7 border border-slate-200 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-100">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-black text-slate-900">
-                {isPhysical 
-                  ? 'Formulir Voucher Fisik & Kartu Perdana' 
-                  : isTokenOrBill 
-                  ? 'Formulir Token PLN & Tagihan' 
-                  : 'Formulir Pulsa & Paket Data'}
-              </h2>
-              {activeAutoFillPreset && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 animate-in fade-in">
-                  <Check className="w-3 h-3 text-emerald-600" />
-                  <span>Auto-Fill: {activeAutoFillPreset}</span>
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+      {/* Main Ultra-Compact POS Card */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-4">
+        {/* Compact Card Header */}
+        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
               {isPhysical 
-                ? 'Input transaksi penjualan voucher fisik dan kartu perdana' 
+                ? 'Voucher Fisik & Perdana' 
                 : isTokenOrBill 
-                ? 'Input transaksi token listrik PLN dan pembayaran tagihan' 
-                : 'Input transaksi pulsa reguler dan paket kuota data'}
-            </p>
+                ? 'Token PLN & Tagihan' 
+                : 'Pulsa & Paket Data'}
+            </h2>
+            {activeAutoFillPreset && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 shrink-0 animate-in fade-in">
+                <Check className="w-2.5 h-2.5 text-emerald-600" />
+                <span className="truncate max-w-[120px] sm:max-w-[200px]">{activeAutoFillPreset}</span>
+              </span>
+            )}
           </div>
 
-          <button
-            form="quick-entry-form"
-            type="submit"
-            disabled={isBalanceInsufficient}
-            className="hidden sm:inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-2.5 px-5 rounded-xl text-xs shadow-sm transition shrink-0 cursor-pointer"
-          >
-            <span>Simpan & Catat Transaksi</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium shrink-0">
+            Mode Kasir Cepat
+          </div>
         </div>
 
-        {/* Notifications */}
+        {/* Inline Compact Error & Success Notifications */}
         {errorMessage && (
-          <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+          <div className="p-2.5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{errorMessage}</span>
+            <span className="flex-1">{errorMessage}</span>
           </div>
         )}
 
         {successNotice && (
-          <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{successNotice}</span>
+            <span className="flex-1">{successNotice}</span>
           </div>
         )}
 
-        {/* The Form */}
-        <form id="quick-entry-form" onSubmit={handleSubmit} className="space-y-5">
+        {/* Compact Form */}
+        <form id="quick-entry-form" onSubmit={handleSubmit} className="space-y-3">
           {isPhysical ? (
             /* ============================================================
-               1. VOUCHER FISIK & KARTU PERDANA
-               Form: Jenis Layanan/Nama Produk, Qty (Stok Terpotong), 
-                     Harga Modal, Harga Jual, Jenis pembayaran
+               1. VOUCHER FISIK & KARTU PERDANA (Zero-Scroll Compact)
                ============================================================ */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-              {/* Jenis Layanan / Nama Produk */}
-              <div>
-                <ProductSearchDropdown
-                  presets={presets}
-                  value={serviceName}
-                  selectedCategory={selectedCategory}
-                  detectedProvider={detectedProvider}
-                  onSelectPreset={(preset) => applyPreset(preset)}
-                  onCustomInputChange={(val) => {
-                    setServiceName(val);
-                    if (activeAutoFillPreset && val !== activeAutoFillPreset) {
-                      setActiveAutoFillPreset(null);
-                    }
-                  }}
-                  onOpenMasterProducts={onOpenMasterProducts}
-                  error={Boolean(errorMessage && !serviceName.trim())}
-                />
-              </div>
-
-              {/* Qty (Stok Terpotong) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Qty (Stok Terpotong) <span className="text-rose-500">*</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuantityChange(quantity - 1)}
-                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold flex items-center justify-center transition active:scale-95 shrink-0"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={quantity}
-                    onChange={(e) => handleQuantityChange(parseInt(e.target.value, 10) || 1)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-center text-sm font-black text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleQuantityChange(quantity + 1)}
-                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold flex items-center justify-center transition active:scale-95 shrink-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-1">Stok fisik terpotong {quantity} pcs saat disimpan</p>
-              </div>
-
-              {/* Harga Modal */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Harga Modal <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
-                  <input
-                    type="number"
-                    step="100"
-                    required
-                    placeholder="0"
-                    value={costPrice}
-                    onChange={(e) => setCostPrice(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                {/* Produk / Voucher */}
+                <div>
+                  <ProductSearchDropdown
+                    presets={presets}
+                    value={serviceName}
+                    selectedCategory={selectedCategory}
+                    detectedProvider={detectedProvider}
+                    onSelectPreset={(preset) => applyPreset(preset)}
+                    onCustomInputChange={(val) => {
+                      setServiceName(val);
+                      if (activeAutoFillPreset && val !== activeAutoFillPreset) {
+                        setActiveAutoFillPreset(null);
+                      }
+                    }}
+                    onOpenMasterProducts={onOpenMasterProducts}
+                    error={Boolean(errorMessage && !serviceName.trim())}
                   />
                 </div>
-              </div>
 
-              {/* Harga Jual */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Harga Jual <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
-                  <input
-                    type="number"
-                    step="100"
-                    required
-                    placeholder="0"
-                    value={sellingPrice}
-                    onChange={(e) => setSellingPrice(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Jenis Pembayaran & Akun Penampung (Di akhir setelah Harga Jual) */}
-              <div className="md:col-span-2">
-                <PaymentDestinationSelect
-                  paymentMethod={paymentMethod}
-                  onChangePaymentMethod={setPaymentMethod}
-                  destinationAccountId={destinationAccountId}
-                  onChangeDestinationAccount={setDestinationAccountId}
-                  accounts={accounts}
-                  cashOnHand={cashOnHand}
-                  sellingPrice={numSell}
-                />
-              </div>
-            </div>
-          ) : isTokenOrBill ? (
-            /* ============================================================
-               2. TOKEN PLN & TAGIHAN
-               Order: No Meter, Jenis Layanan/Nama Produk, 
-                      Sumber Saldo Terpotong, Harga Modal (Saldo Terpotong), 
-                      Harga Jual (Uang diterima dari pelanggan), Jenis Pembayaran
-               ============================================================ */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-              {/* No Meter */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    No Meter / ID Pelanggan <span className="text-rose-500">*</span>
+                {/* Qty Stepper */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Jumlah (Qty) <span className="text-rose-500">*</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setIsCustomerPickerOpen(true)}
-                    className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-lg flex items-center gap-1 transition cursor-pointer shadow-2xs"
-                    title="Pilih dari database pelanggan"
-                  >
-                    <Users className="w-3 h-3" />
-                    <span>Pilih Pelanggan</span>
-                  </button>
-                </div>
-                <input
-                  ref={targetInputRef}
-                  type="text"
-                  required
-                  placeholder="Contoh: 14234567890 / 51234567890"
-                  value={targetNumber}
-                  onChange={(e) => setTargetNumber(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold font-mono text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-                />
-                {customerName && (
-                  <div className="mt-1 flex items-center justify-between px-2 py-0.5 bg-emerald-50/80 border border-emerald-200 rounded-md">
-                    <span className="text-[11px] text-emerald-800 font-bold flex items-center gap-1 truncate">
-                      <UserCheck className="w-3 h-3 text-emerald-600 shrink-0" />
-                      Pelanggan: {customerName}
-                    </span>
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => setCustomerName('')}
-                      className="text-[10px] text-slate-400 hover:text-rose-600 font-semibold underline shrink-0 cursor-pointer"
+                      onClick={() => handleQuantityChange(quantity - 1)}
+                      className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center transition active:scale-95 shrink-0"
                     >
-                      Batal
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={quantity}
+                      onChange={(e) => handleQuantityChange(parseInt(e.target.value, 10) || 1)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 text-center text-sm font-black text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleQuantityChange(quantity + 1)}
+                      className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center transition active:scale-95 shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                )}
-              </div>
-
-              {/* Jenis Layanan / Nama Produk */}
-              <div>
-                <ProductSearchDropdown
-                  presets={presets}
-                  value={serviceName}
-                  selectedCategory={selectedCategory}
-                  detectedProvider={detectedProvider}
-                  onSelectPreset={(preset) => applyPreset(preset)}
-                  onCustomInputChange={(val) => {
-                    setServiceName(val);
-                    if (activeAutoFillPreset && val !== activeAutoFillPreset) {
-                      setActiveAutoFillPreset(null);
-                    }
-                  }}
-                  onOpenMasterProducts={onOpenMasterProducts}
-                  error={Boolean(errorMessage && !serviceName.trim())}
-                />
-              </div>
-
-              {/* Sumber saldo Terpotong */}
-              <div className="md:col-span-2">
-                <AccountSelect
-                  id="select-source-account"
-                  label="Sumber Saldo Terpotong *"
-                  accounts={accounts}
-                  value={sourceAccountId}
-                  onChange={(accKey) => setSourceAccountId(accKey)}
-                  requiredAmount={numCost}
-                  error={isBalanceInsufficient}
-                  includePhysicalStock={false}
-                  hideBalance={true}
-                />
-                {isBalanceInsufficient && (
-                  <p className="text-[11px] text-rose-600 font-bold mt-1">
-                    Saldo akun modal ini tidak mencukupi untuk transaksi ini!
-                  </p>
-                )}
-              </div>
-
-              {/* Harga Modal (Saldo Terpotong) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Harga Modal (Saldo Terpotong) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
-                  <input
-                    type="number"
-                    step="100"
-                    required
-                    placeholder="0"
-                    value={costPrice}
-                    onChange={(e) => setCostPrice(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-                {/* Quick Nominal Pill Buttons */}
-                <div className="grid grid-cols-4 gap-1.5 mt-2">
-                  {[20000, 50000, 100000, 200000].map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => handleSetQuickAmount(amt)}
-                      className="text-[10px] py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition text-center"
-                    >
-                      {amt >= 1000 ? `${amt / 1000}rb` : amt}
-                    </button>
-                  ))}
                 </div>
               </div>
 
-              {/* Harga Jual (Uang diterima dari pelanggan) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Harga Jual (Uang diterima dari pelanggan) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
-                  <input
-                    type="number"
-                    step="100"
-                    required
-                    placeholder="0"
-                    value={sellingPrice}
-                    onChange={(e) => setSellingPrice(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
-                  />
+              {/* Harga Modal & Harga Jual Sub-Grid */}
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Harga Modal <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">Rp</span>
+                    <input
+                      type="number"
+                      step="100"
+                      required
+                      placeholder="0"
+                      value={costPrice}
+                      onChange={(e) => setCostPrice(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-2.5 py-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Harga Jual <span className="text-rose-500">*</span>
+                    </label>
+                    {calculatedProfit > 0 && (
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                        +{formatRupiah(calculatedProfit)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">Rp</span>
+                    <input
+                      type="number"
+                      step="100"
+                      required
+                      placeholder="0"
+                      value={sellingPrice}
+                      onChange={(e) => setSellingPrice(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-2.5 py-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Jenis Pembayaran & Akun Penampung (Di akhir setelah Harga Jual) */}
-              <div className="md:col-span-2">
-                <PaymentDestinationSelect
-                  paymentMethod={paymentMethod}
-                  onChangePaymentMethod={setPaymentMethod}
-                  destinationAccountId={destinationAccountId}
-                  onChangeDestinationAccount={setDestinationAccountId}
-                  accounts={accounts}
-                  cashOnHand={cashOnHand}
-                  sellingPrice={numSell}
-                />
-              </div>
+              {/* Jenis Pembayaran */}
+              <PaymentDestinationSelect
+                paymentMethod={paymentMethod}
+                onChangePaymentMethod={setPaymentMethod}
+                destinationAccountId={destinationAccountId}
+                onChangeDestinationAccount={setDestinationAccountId}
+                accounts={accounts}
+                cashOnHand={cashOnHand}
+                sellingPrice={numSell}
+              />
             </div>
           ) : (
             /* ============================================================
-               3. PULSA & PAKET DATA (dan Layanan Digital)
-               Order: Nomor Hp, Jenis Layanan/Nama Produk, 
-                      Sumber Saldo Terpotong, Harga Modal (Saldo Terpotong), 
-                      Harga Jual (Uang diterima dari pelanggan), Jenis Pembayaran
+               2. PULSA, DATA, PLN, E-WALLET & DIGITAL (Zero-Scroll Compact)
                ============================================================ */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-              {/* Nomor Tujuan */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    {targetFieldLabel} <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    {detectedProvider && selectedCategory === 'pulsa_data' && (
-                      <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                        {detectedProvider}
-                      </span>
-                    )}
+            <div className="space-y-3">
+              {/* Row 1: Nomor Tujuan + Nama Produk */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                {/* Nomor HP / No Meter */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                        {targetFieldLabel} <span className="text-rose-500">*</span>
+                      </label>
+                      {detectedProvider && selectedCategory === 'pulsa_data' && (
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded-full shrink-0">
+                          {detectedProvider}
+                        </span>
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => setIsCustomerPickerOpen(true)}
-                      className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-lg flex items-center gap-1 transition cursor-pointer shadow-2xs"
-                      title="Pilih dari database pelanggan"
+                      className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 px-1.5 py-0.5 rounded-lg flex items-center gap-1 transition cursor-pointer shrink-0"
+                      title="Pilih dari kontak pelanggan"
                     >
                       <Users className="w-3 h-3" />
-                      <span>Pilih Pelanggan</span>
+                      <span>Pelanggan</span>
                     </button>
                   </div>
-                </div>
-                <input
-                  ref={targetInputRef}
-                  type={selectedCategory === 'transfer_tarik' ? 'text' : 'tel'}
-                  required
-                  placeholder={targetFieldPlaceholder}
-                  value={targetNumber}
-                  onChange={(e) => setTargetNumber(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold font-mono text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
-                />
-                {customerName && (
-                  <div className="mt-1 flex items-center justify-between px-2 py-0.5 bg-emerald-50/80 border border-emerald-200 rounded-md">
-                    <span className="text-[11px] text-emerald-800 font-bold flex items-center gap-1 truncate">
-                      <UserCheck className="w-3 h-3 text-emerald-600 shrink-0" />
-                      Pelanggan: {customerName}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setCustomerName('')}
-                      className="text-[10px] text-slate-400 hover:text-rose-600 font-semibold underline shrink-0 cursor-pointer"
-                    >
-                      Batal
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Jenis Layanan / Nama Produk */}
-              <div>
-                <ProductSearchDropdown
-                  presets={presets}
-                  value={serviceName}
-                  selectedCategory={selectedCategory}
-                  detectedProvider={detectedProvider}
-                  onSelectPreset={(preset) => applyPreset(preset)}
-                  onCustomInputChange={(val) => {
-                    setServiceName(val);
-                    if (activeAutoFillPreset && val !== activeAutoFillPreset) {
-                      setActiveAutoFillPreset(null);
-                    }
-                  }}
-                  onOpenMasterProducts={onOpenMasterProducts}
-                  error={Boolean(errorMessage && !serviceName.trim())}
-                />
-              </div>
-
-              {/* Sumber Saldo Terpotong */}
-              <div className="md:col-span-2">
-                <AccountSelect
-                  id="select-source-account"
-                  label="Sumber Saldo Terpotong *"
-                  accounts={accounts}
-                  value={sourceAccountId}
-                  onChange={(accKey) => setSourceAccountId(accKey)}
-                  requiredAmount={numCost}
-                  error={isBalanceInsufficient}
-                  includePhysicalStock={false}
-                  hideBalance={true}
-                />
-                {isBalanceInsufficient && (
-                  <p className="text-[11px] text-rose-600 font-bold mt-1">
-                    Saldo akun modal ini tidak mencukupi untuk transaksi ini!
-                  </p>
-                )}
-              </div>
-
-              {/* Harga Modal (Saldo Terpotong) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Harga Modal (Saldo Terpotong) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
                   <input
-                    type="number"
-                    step="100"
+                    ref={targetInputRef}
+                    type={selectedCategory === 'transfer_tarik' ? 'text' : 'tel'}
                     required
-                    placeholder="0"
-                    value={costPrice}
-                    onChange={(e) => setCostPrice(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    placeholder={targetFieldPlaceholder}
+                    value={targetNumber}
+                    onChange={(e) => setTargetNumber(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
                   />
+                  {customerName && (
+                    <div className="mt-1 flex items-center justify-between px-2 py-0.5 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-md text-[10px]">
+                      <span className="text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1 truncate">
+                        <UserCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                        Pelanggan: {customerName}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCustomerName('')}
+                        className="text-slate-400 hover:text-rose-600 font-semibold underline shrink-0 cursor-pointer"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {/* Quick Nominal Pill Buttons */}
-                <div className="grid grid-cols-4 gap-1.5 mt-2">
-                  {[10000, 25000, 50000, 100000].map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => handleSetQuickAmount(amt)}
-                      className="text-[10px] py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition text-center"
-                    >
-                      {amt >= 1000 ? `${amt / 1000}rb` : amt}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
-              {/* Harga Jual (Uang diterima dari pelanggan) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Harga Jual (Uang diterima dari pelanggan) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
-                  <input
-                    type="number"
-                    step="100"
-                    required
-                    placeholder="0"
-                    value={sellingPrice}
-                    onChange={(e) => setSellingPrice(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-bold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                {/* Pilih Produk */}
+                <div>
+                  <ProductSearchDropdown
+                    presets={presets}
+                    value={serviceName}
+                    selectedCategory={selectedCategory}
+                    detectedProvider={detectedProvider}
+                    onSelectPreset={(preset) => applyPreset(preset)}
+                    onCustomInputChange={(val) => {
+                      setServiceName(val);
+                      if (activeAutoFillPreset && val !== activeAutoFillPreset) {
+                        setActiveAutoFillPreset(null);
+                      }
+                    }}
+                    onOpenMasterProducts={onOpenMasterProducts}
+                    error={Boolean(errorMessage && !serviceName.trim())}
                   />
                 </div>
               </div>
 
-              {/* Jenis Pembayaran & Akun Penampung (Di akhir setelah Harga Jual) */}
-              <div className="md:col-span-2">
-                <PaymentDestinationSelect
-                  paymentMethod={paymentMethod}
-                  onChangePaymentMethod={setPaymentMethod}
-                  destinationAccountId={destinationAccountId}
-                  onChangeDestinationAccount={setDestinationAccountId}
-                  accounts={accounts}
-                  cashOnHand={cashOnHand}
-                  sellingPrice={numSell}
-                />
+              {/* Row 2: Sumber Saldo Modal + Subgrid (Harga Modal & Harga Jual) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                {/* Sumber Saldo Modal */}
+                <div>
+                  <AccountSelect
+                    id="select-source-account"
+                    label="Sumber Saldo Modal *"
+                    accounts={accounts}
+                    value={sourceAccountId}
+                    onChange={(accKey) => setSourceAccountId(accKey)}
+                    requiredAmount={numCost}
+                    error={isBalanceInsufficient}
+                    includePhysicalStock={false}
+                    hideBalance={false}
+                  />
+                  {isBalanceInsufficient && (
+                    <p className="text-[10px] text-rose-600 font-bold mt-0.5">
+                      Saldo akun modal ini tidak cukup!
+                    </p>
+                  )}
+                </div>
+
+                {/* Subgrid: Harga Modal & Harga Jual */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 truncate">
+                      Harga Modal <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">Rp</span>
+                      <input
+                        type="number"
+                        step="100"
+                        required
+                        placeholder="0"
+                        value={costPrice}
+                        onChange={(e) => setCostPrice(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-8 pr-2 py-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                        Harga Jual <span className="text-rose-500">*</span>
+                      </label>
+                      {calculatedProfit > 0 && (
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 shrink-0">
+                          +{formatRupiah(calculatedProfit)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">Rp</span>
+                      <input
+                        type="number"
+                        step="100"
+                        required
+                        placeholder="0"
+                        value={sellingPrice}
+                        onChange={(e) => handleSellingPriceChange(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-8 pr-2 py-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Nama Pelanggan & Catatan Transaksi */}
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-200/80">
+              {/* Row 3: Jenis Pembayaran (Tunai / QRIS / Transfer) */}
+              <PaymentDestinationSelect
+                paymentMethod={paymentMethod}
+                onChangePaymentMethod={setPaymentMethod}
+                destinationAccountId={destinationAccountId}
+                onChangeDestinationAccount={setDestinationAccountId}
+                accounts={accounts}
+                cashOnHand={cashOnHand}
+                sellingPrice={numSell}
+              />
+            </div>
+          )}
+
+          {/* Row 4: Collapsible Optional Details (Nama Pelanggan, Catatan & No. SN) */}
+          <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
+              className="w-full flex items-center justify-between py-1 px-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer"
+            >
+              <div className="flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-slate-400" />
+                <span>
+                  {customerName || notes || snRefNumber
+                    ? `Data Tambahan: ${customerName ? `Pelanggan: ${customerName}` : ''} ${notes ? `· Catatan: ${notes}` : ''}`
+                    : '+ Tambah Catatan / Data Pelanggan / No. SN (Opsional)'}
+                </span>
+                {(customerName || notes || snRefNumber) && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                )}
+              </div>
+              {isDetailsExpanded ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {isDetailsExpanded && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 pb-1 animate-in fade-in duration-150">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700">
-                      Nama Pelanggan <span className="text-slate-400 font-normal">(Opsional)</span>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      Nama Pelanggan
                     </label>
                     {targetNumber.trim() && customerName.trim() && onQuickSaveCustomer && (
                       <button
@@ -943,38 +807,77 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                           setSuccessNotice(`Data pelanggan "${customerName}" berhasil disimpan ke database!`);
                           setTimeout(() => setSuccessNotice(null), 3000);
                         }}
-                        className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer"
-                        title="Simpan nomor ini ke database pelanggan"
+                        className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        title="Simpan ke daftar pelanggan"
                       >
-                        <UserPlus className="w-3 h-3 text-emerald-600" />
-                        <span>Simpan ke Database</span>
+                        <UserPlus className="w-3 h-3" />
+                        <span>Simpan ke DB</span>
                       </button>
                     )}
                   </div>
                   <input
                     type="text"
-                    placeholder="Contoh: Pak Budi, Mas Dimas..."
+                    placeholder="Contoh: Mas Dimas, Bu Rina..."
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Catatan Transaksi <span className="text-slate-400 font-normal">(Opsional)</span>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Catatan Transaksi / No. SN
                   </label>
                   <input
                     type="text"
-                    placeholder="Keterangan / info tambahan..."
+                    placeholder="Keterangan transaksi / No. Ref..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Integrated Compact Bottom Action Bar (Inside the Card - Zero External Overlay) */}
+          <div className="pt-2">
+            <div className="bg-slate-900 text-white rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-md">
+              {/* Total & Profit Info */}
+              <div className="flex items-center justify-between sm:justify-start gap-3">
+                <div>
+                  <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block leading-none mb-1">
+                    Total Bayar
+                  </span>
+                  <span className="text-base sm:text-lg font-black text-emerald-400 leading-none">
+                    {numSell > 0 ? formatRupiah(numSell) : 'Rp 0'}
+                  </span>
+                </div>
+
+                {calculatedProfit > 0 && (
+                  <div className="bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-700 text-right sm:text-left">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block leading-none">
+                      Est. Laba
+                    </span>
+                    <span className="text-xs font-bold text-teal-300 leading-none">
+                      +{formatRupiah(calculatedProfit)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Submit Action Button */}
+              <button
+                id="btn-submit-quick-entry"
+                type="submit"
+                disabled={isBalanceInsufficient}
+                className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black py-2.5 px-5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-150 cursor-pointer"
+              >
+                <span>Simpan Transaksi</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
             </div>
-          )}
+          </div>
         </form>
       </div>
 
@@ -993,49 +896,6 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
         }}
         onOpenCustomerManager={onOpenCustomerManager}
       />
-
-      {/* Floating Capsule Bottom Bar for Simpan & Catat Transaksi (Bentuk Kapsul Mengambang & Bebas Scrolling) */}
-      <div className="fixed bottom-[104px] sm:bottom-[110px] md:bottom-6 left-0 right-0 z-35 px-3.5 sm:px-6 pointer-events-none transition-all">
-        <div className="max-w-2xl mx-auto pointer-events-auto">
-          <div className="bg-slate-950/95 text-white backdrop-blur-xl p-2 sm:p-2.5 sm:px-4 rounded-full border border-slate-700 shadow-[0_12px_36px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2.5 sm:gap-4 ring-1 ring-white/20">
-            {/* Total Bayar Info Pill */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="bg-slate-900/90 pl-3.5 pr-4 py-1.5 sm:py-2 rounded-full border border-slate-800 flex items-center gap-2.5 shrink-0">
-                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block leading-tight">
-                  Total
-                </span>
-                <span className="text-sm sm:text-base font-black text-emerald-400 leading-tight">
-                  {numSell > 0 ? formatRupiah(numSell) : 'Rp 0'}
-                </span>
-              </div>
-
-              {isBalanceInsufficient ? (
-                <span className="text-[10px] sm:text-[11px] font-bold text-rose-300 bg-rose-950/80 border border-rose-800/60 px-2.5 py-1 rounded-full truncate">
-                  Saldo kurang!
-                </span>
-              ) : (
-                <div className="hidden sm:block text-xs text-slate-300 truncate font-medium max-w-[200px]">
-                  {isPhysical
-                    ? (serviceName ? `${serviceName} (${quantity} pcs)` : 'Voucher Fisik')
-                    : (targetNumber.trim() ? `Tujuan: ${targetNumber}` : 'Siap catat')}
-                </div>
-              )}
-            </div>
-
-            {/* Submit Button Capsule */}
-            <button
-              id="btn-submit-quick-entry"
-              form="quick-entry-form"
-              type="submit"
-              disabled={isBalanceInsufficient}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black py-2.5 sm:py-3 px-4.5 sm:px-7 rounded-full text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all duration-150 cursor-pointer shrink-0"
-            >
-              <span>Simpan & Catat Transaksi</span>
-              <ArrowRight className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.5]" />
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
