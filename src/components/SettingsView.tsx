@@ -69,6 +69,7 @@ interface SettingsViewProps {
   onOpenMasterProducts?: () => void;
   onResetPresets?: () => void;
   onSyncWithGoogleSheets?: () => Promise<void>;
+  onRefreshApp?: () => Promise<void> | void;
 }
 
 export type SettingsSubMenu = 'profil' | 'database' | 'tampilan' | 'data' | null;
@@ -90,6 +91,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenMasterProducts,
   onResetPresets,
   onSyncWithGoogleSheets,
+  onRefreshApp,
 }) => {
   const [activeSubMenu, setActiveSubMenu] = useState<SettingsSubMenu>(null);
   const [formData, setFormData] = useState<RilcellSettings>(settings);
@@ -115,6 +117,32 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [updateStatusToast, setUpdateStatusToast] = useState<string | null>(null);
   const [showChangelogModal, setShowChangelogModal] = useState(false);
+  const [isRefreshingApp, setIsRefreshingApp] = useState(false);
+  const [refreshToast, setRefreshToast] = useState<string | null>(null);
+
+  const handleRefreshApplication = async () => {
+    setIsRefreshingApp(true);
+    setRefreshToast('Memuat ulang & menyinkronkan data...');
+    try {
+      if (onRefreshApp) {
+        await onRefreshApp();
+      } else {
+        await Promise.allSettled([
+          syncAllTransactionsToCloud(transactions),
+          syncAccountsToCloud(accounts),
+          syncSettingsAndCashToCloud(formData, cashOnHand),
+        ]);
+        await new Promise((r) => setTimeout(r, 600));
+        window.location.reload();
+      }
+      setRefreshToast('✅ Data & aplikasi berhasil dimuat ulang!');
+    } catch {
+      window.location.reload();
+    } finally {
+      setIsRefreshingApp(false);
+      setTimeout(() => setRefreshToast(null), 3500);
+    }
+  };
 
   const handleCheckUpdate = async () => {
     setIsCheckingUpdate(true);
@@ -249,18 +277,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     },
     {
       id: 'database' as const,
-      label: 'Database & Cloud',
-      title: 'Database Cloud Firestore & Sheets',
-      desc: 'Koneksi online realtime, sinkron multi-kasir, dan Google Sheets',
+      label: 'Database, Cloud & Sinkron',
+      title: 'Database Cloud Firestore, Refresh & Sheets',
+      desc: 'Koneksi realtime, muat ulang / refresh aplikasi, dan Google Sheets',
       icon: Cloud,
       color: 'sky',
       badge: 'Realtime Cloud',
     },
     {
       id: 'tampilan' as const,
-      label: 'Tampilan & Fitur',
-      title: 'Tampilan, Saldo & Master Produk',
-      desc: 'Mode gelap/terang, batas saldo minimal, & master produk konter',
+      label: 'Tampilan, Fitur & Versi',
+      title: 'Tampilan, Saldo, Master Produk & Versi Aplikasi',
+      desc: `Mode tema, batas saldo minimal, master produk, dan info versi v${APP_VERSION_INFO.version}`,
       icon: Palette,
       color: 'indigo',
       badge: formData.theme === 'dark' ? 'Mode Gelap' : formData.theme === 'light' ? 'Mode Terang' : 'Sistem Auto',
@@ -279,28 +307,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const currentSubMenuInfo = subMenuItems.find(item => item.id === activeSubMenu);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in duration-200">
+    <div className="max-w-4xl mx-auto space-y-3.5 animate-in fade-in duration-200">
       {/* Save Success Alert */}
       {saveSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-xs">
+        <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-xs">
           <Check className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>Pengaturan RILCELL berhasil disimpan!</span>
         </div>
       )}
 
+      {/* Refresh Application Toast Alert */}
+      {refreshToast && (
+        <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-xs">
+          <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{refreshToast}</span>
+        </div>
+      )}
+
       {/* VIEW MODE 1: MAIN MENU (LIST BERJEJER KE BAWAH / SETTINGS HUB) */}
       {activeSubMenu === null && (
-        <div className="space-y-4 animate-in fade-in duration-200">
-          {/* Top Store Overview Card */}
-          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 rounded-2xl p-5 text-white shadow-md border border-slate-700/80">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-inner">
-                  <Store className="w-6 h-6" />
+        <div className="space-y-3 animate-in fade-in duration-200">
+          {/* Top Store Overview Card - Pinned & Non-Scrolling Sticky Header */}
+          <div className="sticky top-[68px] sm:top-[70px] z-20 pt-0.5 pb-1 -mt-1 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md">
+            <div className="w-full bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 rounded-2xl p-4 sm:p-5 text-white shadow-md border border-slate-700/80 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-inner">
+                  <Store className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-base font-extrabold text-white truncate">
+                    <h2 className="text-sm sm:text-base font-extrabold text-white truncate">
                       {formData.storeName || 'RILCELL'}
                     </h2>
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
@@ -308,31 +344,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       Online Realtime
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300 mt-0.5 truncate">
+                  <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5 truncate">
                     {formData.tagline || 'Konter Pulsa, Paket Data & PPOB'}
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Kasir: <span className="text-slate-200 font-semibold">{formData.cashierName || 'Kasir RILCELL'}</span> • WA: <span className="font-mono text-slate-200">{formData.phone || '-'}</span>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">
+                    Kasir: <span className="text-slate-200 font-semibold">{formData.cashierName || 'Kasir RILCELL'}</span> • Saldo + Kas: <span className="text-emerald-400 font-bold font-mono">{formatRupiah(totalAllMoney)}</span>
                   </p>
                 </div>
               </div>
 
-              <div className="hidden sm:block text-right shrink-0">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Total Saldo + Kas</span>
-                <span className="text-sm font-bold text-emerald-400 font-mono">{formatRupiah(totalAllMoney)}</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  id="refresh-app-btn-header"
+                  onClick={handleRefreshApplication}
+                  disabled={isRefreshingApp}
+                  title="Muat Ulang / Refresh Aplikasi & Data"
+                  className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 hover:text-white border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingApp ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">{isRefreshingApp ? 'Memuat...' : 'Refresh'}</span>
+                </button>
               </div>
             </div>
           </div>
 
           {/* Section Title */}
-          <div className="flex items-center justify-between px-1 pt-1">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+          <div className="flex items-center justify-between px-1 pt-0.5">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Menu Pengaturan & Konfigurasi
             </h3>
-            <span className="text-[11px] text-slate-400">Pilih menu untuk melihat detail</span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">Pilih menu untuk melihat detail</span>
           </div>
 
-          {/* List Sub-Menu Berjejer ke Bawah */}
+          {/* List Sub-Menu Berjejer ke Bawah - Uniform Full Width */}
           <div className="space-y-2.5">
             {subMenuItems.map((item) => {
               const Icon = item.icon;
@@ -349,48 +394,48 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       setActiveSubMenu(item.id);
                     }
                   }}
-                  className="w-full bg-white hover:bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm group select-none"
+                  className="w-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm group select-none"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs ${
                       item.color === 'emerald'
-                        ? 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
                         : item.color === 'sky'
-                        ? 'bg-sky-100 text-sky-700'
+                        ? 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400'
                         : item.color === 'indigo'
-                        ? 'bg-indigo-100 text-indigo-700'
-                        : 'bg-rose-100 text-rose-700'
+                        ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400'
+                        : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                           {item.label}
                         </h4>
                         {item.badge && (
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                             item.color === 'emerald'
-                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                               : item.color === 'sky'
-                              ? 'bg-sky-50 text-sky-800 border border-sky-200'
+                              ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800'
                               : item.color === 'indigo'
-                              ? 'bg-indigo-50 text-indigo-800 border border-indigo-200'
-                              : 'bg-rose-50 text-rose-800 border border-rose-200'
+                              ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                              : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                           }`}>
                             {item.badge}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                         {item.desc}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-600 flex items-center justify-center text-slate-400 transition">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 flex items-center justify-center text-slate-400 transition">
                       <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </div>
@@ -399,113 +444,107 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             })}
           </div>
 
-          {/* Quick Action Shortcuts */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            {onOpenMasterProducts && (
-              <button
-                type="button"
-                onClick={onOpenMasterProducts}
-                className="bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left flex items-center justify-between gap-3 transition shadow-xs cursor-pointer group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                    <Package className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                      Master Produk & Preset
-                    </h5>
-                    <p className="text-[11px] text-slate-500">
-                      {presetsCount} produk tersimpan
-                    </p>
-                  </div>
+          {/* Quick Action Shortcuts - Clean Uniform Full Width Cards */}
+          <div className="space-y-2.5 pt-1">
+            {/* Quick Refresh Action Card */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={handleRefreshApplication}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRefreshApplication(); } }}
+              className="w-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm group select-none"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                  <RefreshCw className={`w-5 h-5 ${isRefreshingApp ? 'animate-spin' : ''}`} />
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            )}
-
-            {onOpenInstallGuide && (
-              <button
-                type="button"
-                onClick={onOpenInstallGuide}
-                className="bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left flex items-center justify-between gap-3 transition shadow-xs cursor-pointer group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
-                    <Smartphone className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
-                      Install Aplikasi HP (PWA)
-                    </h5>
-                    <p className="text-[11px] text-slate-500">
-                      Pasang icon di layar utama
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            )}
-          </div>
-
-          {/* Info Versi & Pembaruan Sistem Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-3.5">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                  <Info className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-xs font-bold text-slate-900">
-                      RILCELL Kasir POS
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      Muat Ulang / Refresh Aplikasi & Data
                     </h4>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                      Versi {APP_VERSION_INFO.version}
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-mono hidden sm:inline-block">
-                      Build {APP_VERSION_INFO.buildCode}
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      Instan
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Pembaruan Terakhir: {APP_VERSION_INFO.buildDate}
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Ganti fungsi tarik layar: Segarkan seluruh data transaksi, saldo akun, dan status koneksi konter
                   </p>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowChangelogModal(true)}
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
-                >
-                  <History className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Catatan Rilis</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCheckUpdate}
-                  disabled={isCheckingUpdate}
-                  className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
-                  <span>{isCheckingUpdate ? 'Memeriksa...' : 'Cek Pembaruan'}</span>
-                </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hidden sm:inline">
+                  {isRefreshingApp ? 'Menyinkronkan...' : 'Refresh Sekarang'}
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/50 group-hover:text-emerald-600 flex items-center justify-center text-slate-400 transition">
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </div>
             </div>
 
-            {updateStatusToast && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-medium text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{updateStatusToast}</span>
+            {onOpenMasterProducts && (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={onOpenMasterProducts}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenMasterProducts(); } }}
+                className="w-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm group select-none"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        Master Produk & Preset Cepat
+                      </h4>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        {presetsCount} Produk Tersimpan
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Kelola daftar paket data, pulsa, token PLN, e-wallet, dan harga modal/jual
+                    </p>
+                  </div>
+                </div>
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-950/50 group-hover:text-blue-600 flex items-center justify-center text-slate-400 transition shrink-0">
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </div>
             )}
 
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Status WebAPK: <strong className="text-slate-600 font-medium">Sinkron Otomatis (Chrome WebAPK)</strong></span>
-              <span className="font-mono">RILCELL POS Engine</span>
-            </div>
+            {onOpenInstallGuide && (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={onOpenInstallGuide}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenInstallGuide(); } }}
+                className="w-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm group select-none"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-11 h-11 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                    <Smartphone className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                        Pasang Aplikasi di HP (PWA)
+                      </h4>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                        Layar Penuh
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Panduan pasang shortcut & icon instan di layar utama Android atau iPhone
+                    </p>
+                  </div>
+                </div>
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-teal-50 dark:group-hover:bg-teal-950/50 group-hover:text-teal-600 flex items-center justify-center text-slate-400 transition shrink-0">
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -920,14 +959,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           {/* PWA Mobile Installation Card */}
           {onOpenInstallGuide && (
-            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-5 rounded-2xl border border-emerald-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 dark:from-emerald-950/40 dark:via-teal-950/40 dark:to-emerald-950/40 p-5 rounded-2xl border border-emerald-200/90 dark:border-emerald-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
                   <Smartphone className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">Install Aplikasi Kasir RILCELL di HP</h3>
-                  <p className="text-xs text-slate-600 mt-0.5">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Install Aplikasi Kasir RILCELL di HP</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                     Pasang aplikasi di layar utama Android atau iPhone tanpa Play Store untuk akses cepat layar penuh.
                   </p>
                 </div>
@@ -942,6 +981,66 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             </div>
           )}
+
+          {/* Info Versi & Pembaruan Sistem Card (Dipindahkan ke Sub-Menu Relevan) */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
+                  <Info className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                      RILCELL Kasir POS
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      Versi {APP_VERSION_INFO.version}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono hidden sm:inline-block">
+                      Build {APP_VERSION_INFO.buildCode}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Pembaruan Terakhir: {APP_VERSION_INFO.buildDate}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowChangelogModal(true)}
+                  className="flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <History className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Catatan Rilis</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCheckUpdate}
+                  disabled={isCheckingUpdate}
+                  className="flex-1 sm:flex-none px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+                  <span>{isCheckingUpdate ? 'Memeriksa...' : 'Cek Pembaruan'}</span>
+                </button>
+              </div>
+            </div>
+
+            {updateStatusToast && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-medium text-emerald-800 dark:text-emerald-200 flex items-center gap-2 animate-in fade-in duration-200">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{updateStatusToast}</span>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>Status WebAPK: <strong className="text-slate-600 dark:text-slate-300 font-medium">Sinkron Otomatis (Chrome WebAPK)</strong></span>
+              <span className="font-mono">RILCELL POS Engine</span>
+            </div>
+          </div>
         </div>
       )}
 

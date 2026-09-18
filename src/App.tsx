@@ -962,6 +962,9 @@ export function App() {
             onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
             onOpenMasterProducts={() => setActiveTab('products')}
             onResetPresets={handleResetPresets}
+            onRefreshApp={() => {
+              window.location.reload();
+            }}
           />
         )}
       </main>
