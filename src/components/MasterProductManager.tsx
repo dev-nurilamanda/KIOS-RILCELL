@@ -38,6 +38,7 @@ interface MasterProductManagerProps {
   onUpdatePreset: (id: string, preset: Partial<QuickPresetProduct>) => void;
   onDeletePreset: (id: string) => void;
   onResetPresets: () => void;
+  onClearAllPresets?: () => void;
   onSelectPresetToTransact?: (preset: QuickPresetProduct) => void;
 }
 
@@ -48,6 +49,7 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
   onUpdatePreset,
   onDeletePreset,
   onResetPresets,
+  onClearAllPresets,
   onSelectPresetToTransact,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -261,19 +263,36 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
               )}
             </div>
 
+            {/* Tombol Hapus / Kosongkan Semua Produk */}
+            {presets.length > 0 && onClearAllPresets && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Hapus & kosongkan SEMUA master produk? Seluruh produk demo/bawaan akan dihapus dari penyimpanan dan cloud sehingga Anda dapat mengisi produk Anda sendiri.')) {
+                    onClearAllPresets();
+                  }
+                }}
+                className="p-2.5 sm:px-3.5 sm:py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 border border-rose-200 shrink-0 cursor-pointer h-11"
+                title="Hapus / Kosongkan semua produk demo"
+              >
+                <Trash2 className="w-4 h-4 text-rose-600" />
+                <span className="hidden sm:inline">Hapus Semua</span>
+              </button>
+            )}
+
             {/* Tombol Reload Data */}
             <button
               type="button"
               onClick={() => {
-                if (confirm('Kembalikan / Reload daftar produk ke data bawaan standar?')) {
+                if (confirm('Kembalikan / Muat ulang daftar produk ke data bawaan standar?')) {
                   onResetPresets();
                 }
               }}
               className="p-2.5 sm:px-3.5 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 border border-slate-200/70 shrink-0 cursor-pointer h-11"
-              title="Reload data bawaan"
+              title="Muat ulang produk bawaan"
             >
               <RotateCcw className="w-4 h-4 text-slate-600" />
-              <span className="hidden sm:inline">Reload</span>
+              <span className="hidden sm:inline">Muat Bawaan</span>
             </button>
 
             {/* Tombol Tambah Produk Baru */}
@@ -323,10 +342,40 @@ export const MasterProductManager: React.FC<MasterProductManagerProps> = ({
 
       {/* Product Cards Grid */}
       {filteredPresets.length === 0 ? (
-        <div className="bg-white rounded-2xl p-10 text-center border border-slate-200">
-          <Package className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-          <p className="text-sm font-bold text-slate-700">Tidak ada produk yang cocok dengan pencarian.</p>
-          <p className="text-xs text-slate-400 mt-1">Klik 'Tambah Produk Baru' untuk mendaftarkan produk konter.</p>
+        <div className="bg-white rounded-2xl p-10 text-center border border-slate-200 shadow-xs max-w-md mx-auto my-6 space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+            <Package className="w-7 h-7" />
+          </div>
+          <div>
+            <p className="text-base font-bold text-slate-800">
+              {presets.length === 0 ? 'Belum Ada Master Produk' : 'Tidak Ada Produk Sesuai Filter'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+              {presets.length === 0
+                ? 'Daftar master produk telah kosong dan bersih. Anda dapat mendaftarkan produk baru atau memuat kembali produk bawaan.'
+                : 'Coba ubah kata kunci pencarian atau pilih kategori lain.'}
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={openAddModal}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Produk Baru</span>
+            </button>
+            {presets.length === 0 && (
+              <button
+                type="button"
+                onClick={onResetPresets}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition cursor-pointer flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Muat Bawaan</span>
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

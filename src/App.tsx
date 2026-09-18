@@ -41,6 +41,8 @@ import {
   syncTransactionToCloud,
   syncAllTransactionsToCloud,
   deleteTransactionFromCloud,
+  deletePresetFromCloud,
+  deleteCustomerFromCloud,
   syncAccountsToCloud,
   syncTransferToCloud,
   syncPresetsToCloud,
@@ -332,13 +334,21 @@ export function App() {
   const handleDeletePreset = (id: string) => {
     setPresets((prev) => {
       const updated = prev.filter((item) => item.id !== id);
-      syncPresetsToCloud(updated);
+      localStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(updated));
       return updated;
     });
+    deletePresetFromCloud(id);
+  };
+
+  const handleClearAllPresets = async () => {
+    setPresets([]);
+    localStorage.setItem(STORAGE_KEYS.PRESETS, '[]');
+    await clearAllPresetsFromCloud();
   };
 
   const handleResetPresets = () => {
     setPresets(QUICK_PRESETS);
+    localStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(QUICK_PRESETS));
     syncPresetsToCloud(QUICK_PRESETS);
   };
 
@@ -368,13 +378,15 @@ export function App() {
   const handleDeleteCustomer = (id: string) => {
     setCustomers((prev) => {
       const updated = prev.filter((c) => c.id !== id);
-      syncCustomersToCloud(updated);
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(updated));
       return updated;
     });
+    deleteCustomerFromCloud(id);
   };
 
   const handleResetCustomers = () => {
     setCustomers(INITIAL_CUSTOMERS);
+    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(INITIAL_CUSTOMERS));
     syncCustomersToCloud(INITIAL_CUSTOMERS);
   };
 
@@ -906,6 +918,7 @@ export function App() {
             onUpdatePreset={handleUpdatePreset}
             onDeletePreset={handleDeletePreset}
             onResetPresets={handleResetPresets}
+            onClearAllPresets={handleClearAllPresets}
             onSelectPresetToTransact={(preset) => {
               setSelectedPresetToFill(preset);
               setActiveTab('entry');

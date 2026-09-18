@@ -101,6 +101,28 @@ export const deleteTransactionFromCloud = async (transactionId: string) => {
   }
 };
 
+export const deletePresetFromCloud = async (presetId: string) => {
+  try {
+    const docRef = doc(db, COLLECTIONS.PRESETS, presetId);
+    await deleteDoc(docRef);
+    return true;
+  } catch (error) {
+    console.warn('Error deleting preset from cloud:', error);
+    return false;
+  }
+};
+
+export const deleteCustomerFromCloud = async (customerId: string) => {
+  try {
+    const docRef = doc(db, COLLECTIONS.CUSTOMERS, customerId);
+    await deleteDoc(docRef);
+    return true;
+  } catch (error) {
+    console.warn('Error deleting customer from cloud:', error);
+    return false;
+  }
+};
+
 // Clear entire collection from Cloud Firestore
 export const clearCollectionFromCloud = async (collectionName: string) => {
   try {
@@ -221,15 +243,15 @@ export const fetchAllFromCloud = async () => {
     const customers = cusSnap.docs.map((d) => d.data() as CustomerRecord);
     const settingsDoc = setSnap.docs.find((d) => d.id === 'config')?.data() as (RilcellSettings & { cashOnHand?: number }) | undefined;
 
-    const isCloudConfigured = !setSnap.empty || !accSnap.empty || !trxSnap.empty;
+    const isCloudConfigured = !setSnap.empty || !accSnap.empty || !trxSnap.empty || !preSnap.empty || !cusSnap.empty;
 
     return {
       isCloudConfigured,
       transactions: transactions.sort((a, b) => b.timestamp - a.timestamp),
       accounts: accounts.length > 0 ? accounts : null,
       transfers: transfers.sort((a, b) => b.timestamp - a.timestamp),
-      presets: presets.length > 0 ? presets : null,
-      customers: customers.length > 0 ? customers : null,
+      presets: isCloudConfigured ? presets : (presets.length > 0 ? presets : null),
+      customers: isCloudConfigured ? customers : (customers.length > 0 ? customers : null),
       settings: settingsDoc || null,
       cashOnHand: typeof settingsDoc?.cashOnHand === 'number' ? settingsDoc.cashOnHand : null,
     };
