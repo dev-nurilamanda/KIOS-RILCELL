@@ -28,7 +28,6 @@ interface NavbarProps {
   presetsCount?: number;
   customersCount?: number;
   onOpenInstallGuide?: () => void;
-  onOpenAIAgent?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -38,7 +37,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   accounts,
   lowBalanceCount,
   onOpenInstallGuide,
-  onOpenAIAgent,
 }) => {
   const [time, setTime] = useState<string>('');
 
@@ -163,24 +161,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Info & Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
-            {/* Top AI Advisor Quick Access Button (Prominent, High-Visibility, Clean) */}
-            {onOpenAIAgent && (
-              <button
-                type="button"
-                id="btn-nav-top-ai-advisor"
-                onClick={onOpenAIAgent}
-                className="group relative flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 via-indigo-700 to-slate-900 hover:from-indigo-500 hover:to-indigo-800 transition shadow-md shadow-indigo-600/25 border border-indigo-400/40 cursor-pointer shrink-0"
-                title="Buka RILCELL AI Business Advisor"
-              >
-                <div className="relative">
-                  <Sparkles className="w-4 h-4 text-amber-300 animate-pulse group-hover:rotate-12 transition-transform" />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-indigo-900" />
-                </div>
-                <span className="hidden sm:inline tracking-tight">AI Advisor</span>
-                <span className="sm:hidden font-bold">AI</span>
-              </button>
-            )}
-
             {/* PANEL SISI KANAN ATAS UNTUK MOBILE: Saldo, Statistik, dan Pengaturan */}
             <div className="flex md:hidden items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-2xs">
               {/* Saldo Modal */}

@@ -34,7 +34,6 @@ import {
 } from 'recharts';
 import { RilcellTransaction, ModalAccount, CustomerRecord } from '../types';
 import { formatRupiah } from '../utils/formatters';
-import { AIBusinessAdvisor } from './AIBusinessAdvisor';
 
 interface DashboardAnalyticsViewProps {
   transactions: RilcellTransaction[];
@@ -44,7 +43,7 @@ interface DashboardAnalyticsViewProps {
 }
 
 type TimeframeOption = 'daily' | 'weekly' | 'monthly' | 'yearly';
-type AnalyticsTab = 'semua' | 'ai_advisor' | 'arus_kas' | 'modal_server' | 'margin' | 'pelanggan' | 'admin_fee';
+type AnalyticsTab = 'semua' | 'arus_kas' | 'modal_server' | 'margin' | 'pelanggan' | 'admin_fee';
 
 export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
   transactions,
@@ -614,7 +613,6 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
         {(
           [
             { id: 'semua', label: 'Ringkasan & Tren', icon: BarChart3 },
-            { id: 'ai_advisor', label: '✨ RILCELL AI Advisor', icon: Sparkles, highlight: true },
             { id: 'arus_kas', label: '1. Arus Kas & Metode Bayar', icon: Banknote },
             { id: 'modal_server', label: '2. Modal Server', icon: Layers },
             { id: 'margin', label: '3. Margin Kategori', icon: PieIcon },
@@ -624,18 +622,13 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
         ).map((tab) => {
           const Icon = tab.icon;
           const isActive = activeSubTab === tab.id;
-          const isHighlight = 'highlight' in tab && tab.highlight;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveSubTab(tab.id)}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer shrink-0 ${
                 isActive
-                  ? isHighlight
-                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-600/20'
-                    : 'bg-emerald-600 text-white shadow-xs'
-                  : isHighlight
-                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
+                  ? 'bg-emerald-600 text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800'
               }`}
             >
@@ -647,50 +640,10 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* SECTION: AI BUSINESS ADVISOR */}
-      {/* ========================================================================= */}
-      {(activeSubTab === 'ai_advisor') && (
-        <AIBusinessAdvisor
-          transactions={transactions}
-          accounts={accounts}
-          cashOnHand={cashOnHand}
-          customers={customers}
-        />
-      )}
-
-      {/* ========================================================================= */}
       {/* SECTION: RINGKASAN & TREN GRAFIK UTAMA */}
       {/* ========================================================================= */}
       {(activeSubTab === 'semua') && (
         <div className="space-y-4 sm:space-y-5">
-          {/* Quick AI Advisor CTA Banner */}
-          <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 rounded-2xl p-4 sm:p-4.5 text-white border border-indigo-800/40 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5 text-indigo-300 animate-pulse" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                  <span>Konsultasi AI Business Advisor RILCELL</span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.2 rounded-full border border-emerald-400/30">
-                    Aktif
-                  </span>
-                </h4>
-                <p className="text-[11px] sm:text-xs text-slate-300 line-clamp-1">
-                  Minta AI menganalisis efisiensi saldo server, perputaran kas, atau strategi penetapan harga konter.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveSubTab('ai_advisor')}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-md shadow-indigo-900/40 w-full sm:w-auto justify-center"
-            >
-              <span>Buka AI Advisor</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
           {/* Main Chart Section: Omzet & Profit Trends */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
