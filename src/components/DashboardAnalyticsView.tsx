@@ -14,7 +14,6 @@ import {
   Clock,
   Users,
   ShieldAlert,
-  Sparkles,
   Info,
   Calendar,
   ArrowUpRight
@@ -1227,7 +1226,7 @@ export const DashboardAnalyticsView: React.FC<DashboardAnalyticsViewProps> = ({
                 <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase">
                   Pendapatan Biaya Admin / Fee
                 </span>
-                <Sparkles className="w-4 h-4 text-emerald-600" />
+                <Coins className="w-4 h-4 text-emerald-600" />
               </div>
               <div className="text-base font-black text-emerald-600 dark:text-emerald-400">
                 +{formatRupiah(feeAnalysis.transferAdminEarned)}

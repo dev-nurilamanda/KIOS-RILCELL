@@ -10,9 +10,7 @@ import {
   Clock, 
   UserCheck,
   Package,
-  Users,
-  Sparkles,
-  Bot
+  Users
 } from 'lucide-react';
 import { RilcellSettings, ModalAccount } from '../types';
 import { PWAInstallButton } from './PWAInstallButton';
