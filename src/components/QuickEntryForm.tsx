@@ -409,24 +409,24 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-2 sm:space-y-3 pb-1 sm:pb-2 animate-in fade-in duration-200">
-      {/* Category Capsule Bar - Sticky Non-Scrolling Pin under Navbar */}
-      <div className="sticky top-[68px] sm:top-[70px] z-30 pt-0.5 pb-1 -mt-1 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md transition-all">
-        <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-1.5 sm:p-2 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 sm:gap-2">
+    <div className="w-full max-w-4xl mx-auto space-y-3 sm:space-y-4 pb-2 animate-in fade-in duration-200">
+      {/* Category Icon-Only Bar - Sticky Non-Scrolling Pin under Navbar */}
+      <div className="sticky top-[64px] sm:top-[70px] z-30 pt-0.5 pb-1 -mt-1 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md transition-all">
+        <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-2 sm:p-2.5 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 sm:gap-2">
           {/* Scroll Left Button */}
           <button
             type="button"
             onClick={() => scrollCategories('left')}
-            className="hidden sm:flex w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 items-center justify-center shrink-0 transition cursor-pointer"
+            className="hidden sm:flex w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 items-center justify-center shrink-0 transition cursor-pointer"
             aria-label="Geser ke kiri"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
 
-          {/* Categories Horizontal Scroll List */}
+          {/* Categories Horizontal Scroll List (Icon-Only without Text Labels) */}
           <div 
             ref={categoryScrollRef}
-            className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-0.5 px-0.5"
+            className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-1 px-1"
           >
             {CATEGORY_ITEMS.map((cat) => {
               const isActive = selectedCategory === cat.id;
@@ -435,14 +435,16 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                   key={cat.id}
                   id={`cat-capsule-${cat.id}`}
                   type="button"
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.96 }}
+                  title={cat.label}
+                  aria-label={cat.label}
+                  whileHover={{ scale: 1.06, y: -1 }}
+                  whileTap={{ scale: 0.92 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => handleCategoryChange(cat.id)}
-                  className={`relative flex items-center gap-2.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm whitespace-nowrap min-w-[135px] sm:min-w-[155px] justify-center transition-colors cursor-pointer select-none border ${
+                  className={`relative flex items-center justify-center w-12 h-12 sm:w-13 sm:h-13 rounded-2xl transition-all cursor-pointer select-none shrink-0 border ${
                     isActive
-                      ? 'text-white border-emerald-600 shadow-md shadow-emerald-600/20'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-700/80'
+                      ? 'text-white border-emerald-600 shadow-md shadow-emerald-600/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-50/90 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/90 dark:border-slate-700/80'
                   }`}
                 >
                   {isActive && (
@@ -452,12 +454,11 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
-                  <span className={`p-1.5 rounded-xl transition-colors ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-slate-700 text-emerald-700 dark:text-emerald-400'
+                  <span className={`p-2 rounded-xl transition-colors ${
+                    isActive ? 'text-white' : 'text-slate-600 dark:text-slate-300'
                   }`}>
                     {cat.icon}
                   </span>
-                  <span className="tracking-tight">{cat.label}</span>
                 </motion.button>
               );
             })}
@@ -467,7 +468,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
           <button
             type="button"
             onClick={() => scrollCategories('right')}
-            className="hidden sm:flex w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 items-center justify-center shrink-0 transition cursor-pointer"
+            className="hidden sm:flex w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 items-center justify-center shrink-0 transition cursor-pointer"
             aria-label="Geser ke kanan"
           >
             <ChevronRight className="w-4 h-4" />
@@ -527,16 +528,16 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
           </div>
         )}
 
-        {/* Compact Form */}
-        <form id="quick-entry-form" onSubmit={handleSubmit} className="space-y-3">
+        {/* Form Kasir */}
+        <form id="quick-entry-form" onSubmit={handleSubmit} className="space-y-4">
           {isPhysical ? (
             /* ============================================================
-               1. VOUCHER FISIK & KARTU PERDANA (Zero-Scroll Compact)
+               1. VOUCHER FISIK & KARTU PERDANA (Spacious & Easy Read)
                ============================================================ */
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-                {/* Produk / Voucher */}
-                <div>
+            <div className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Produk / Voucher (2 cols on sm) */}
+                <div className="sm:col-span-2">
                   <ProductSearchDropdown
                     presets={presets}
                     value={serviceName}
@@ -554,18 +555,18 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                   />
                 </div>
 
-                {/* Qty Stepper */}
+                {/* Qty Stepper (1 col on sm) */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     Jumlah (Qty) <span className="text-rose-500">*</span>
                   </label>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(quantity - 1)}
-                      className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center transition active:scale-95 shrink-0"
+                      className="w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center transition active:scale-95 shrink-0"
                     >
-                      <Minus className="w-3.5 h-3.5" />
+                      <Minus className="w-4 h-4" />
                     </button>
                     <input
                       type="number"
@@ -573,27 +574,27 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                       required
                       value={quantity}
                       onChange={(e) => handleQuantityChange(parseInt(e.target.value, 10) || 1)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 text-center text-sm font-black text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-2.5 text-center text-base font-black text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(quantity + 1)}
-                      className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center transition active:scale-95 shrink-0"
+                      className="w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center transition active:scale-95 shrink-0"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Harga Modal & Harga Jual Sub-Grid */}
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              {/* Harga Modal & Harga Jual Grid yang Lebih Lebar */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 truncate">
                     Harga Modal <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">Rp</span>
+                    <span className="absolute left-3.5 top-3 sm:top-3.5 text-xs sm:text-sm font-bold text-slate-400">Rp</span>
                     <input
                       type="number"
                       step="100"
@@ -601,24 +602,24 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                       placeholder="0"
                       value={costPrice}
                       onChange={(e) => setCostPrice(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-2.5 py-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-10 sm:pl-11 pr-3 py-3 sm:py-3.5 text-sm sm:text-base font-bold font-mono text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 truncate">
                       Harga Jual <span className="text-rose-500">*</span>
                     </label>
                     {calculatedProfit > 0 && (
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
                         +{formatRupiah(calculatedProfit)}
                       </span>
                     )}
                   </div>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">Rp</span>
+                    <span className="absolute left-3.5 top-3 sm:top-3.5 text-xs sm:text-sm font-bold text-slate-400">Rp</span>
                     <input
                       type="number"
                       step="100"
@@ -626,7 +627,7 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                       placeholder="0"
                       value={sellingPrice}
                       onChange={(e) => setSellingPrice(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-2.5 py-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-10 sm:pl-11 pr-3 py-3 sm:py-3.5 text-sm sm:text-base font-bold font-mono text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -645,20 +646,20 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
             </div>
           ) : (
             /* ============================================================
-               2. PULSA, DATA, PLN, E-WALLET & DIGITAL (Zero-Scroll Compact)
+               2. PULSA, DATA, PLN, E-WALLET & DIGITAL (Spacious & Easy Read)
                ============================================================ */
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {/* Row 1: Nomor Tujuan + Nama Produk */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Nomor HP / No Meter */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                      <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 truncate">
                         {targetFieldLabel} <span className="text-rose-500">*</span>
                       </label>
                       {detectedProvider && selectedCategory === 'pulsa_data' && (
-                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded-full shrink-0">
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full shrink-0">
                           {detectedProvider}
                         </span>
                       )}
@@ -666,10 +667,10 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsCustomerPickerOpen(true)}
-                      className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 px-1.5 py-0.5 rounded-lg flex items-center gap-1 transition cursor-pointer shrink-0"
+                      className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 px-2 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer shrink-0"
                       title="Pilih dari kontak pelanggan"
                     >
-                      <Users className="w-3 h-3" />
+                      <Users className="w-3.5 h-3.5" />
                       <span>Pelanggan</span>
                     </button>
                   </div>
@@ -680,12 +681,12 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                     placeholder={targetFieldPlaceholder}
                     value={targetNumber}
                     onChange={(e) => setTargetNumber(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 sm:py-3.5 text-sm sm:text-base font-bold font-mono tracking-wider text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none placeholder:font-sans placeholder:font-normal placeholder:text-xs sm:placeholder:text-sm"
                   />
                   {customerName && (
-                    <div className="mt-1 flex items-center justify-between px-2 py-0.5 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-md text-[10px]">
-                      <span className="text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1 truncate">
-                        <UserCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                    <div className="mt-1.5 flex items-center justify-between px-2.5 py-1 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-lg text-xs">
+                      <span className="text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1.5 truncate">
+                        <UserCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         Pelanggan: {customerName}
                       </span>
                       <button
@@ -719,76 +720,73 @@ export const QuickEntryForm: React.FC<QuickEntryFormProps> = ({
                 </div>
               </div>
 
-              {/* Row 2: Sumber Saldo Modal + Subgrid (Harga Modal & Harga Jual) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-                {/* Sumber Saldo Modal */}
+              {/* Row 2: Sumber Saldo Modal (Lebar dan Leluasa) */}
+              <div>
+                <AccountSelect
+                  id="select-source-account"
+                  label="Sumber Saldo Modal *"
+                  accounts={accounts}
+                  value={sourceAccountId}
+                  onChange={(accKey) => setSourceAccountId(accKey)}
+                  requiredAmount={numCost}
+                  error={isBalanceInsufficient}
+                  includePhysicalStock={false}
+                  hideBalance={false}
+                />
+                {isBalanceInsufficient && (
+                  <p className="text-xs text-rose-600 font-bold mt-1">
+                    Saldo akun modal ini tidak cukup!
+                  </p>
+                )}
+              </div>
+
+              {/* Row 3: Harga Modal & Harga Jual (Dibuat Lebar Berdampingan) */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <AccountSelect
-                    id="select-source-account"
-                    label="Sumber Saldo Modal *"
-                    accounts={accounts}
-                    value={sourceAccountId}
-                    onChange={(accKey) => setSourceAccountId(accKey)}
-                    requiredAmount={numCost}
-                    error={isBalanceInsufficient}
-                    includePhysicalStock={false}
-                    hideBalance={false}
-                  />
-                  {isBalanceInsufficient && (
-                    <p className="text-[10px] text-rose-600 font-bold mt-0.5">
-                      Saldo akun modal ini tidak cukup!
-                    </p>
-                  )}
+                  <label className="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 truncate">
+                    Harga Modal <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-3 sm:top-3.5 text-xs sm:text-sm font-bold text-slate-400">Rp</span>
+                    <input
+                      type="number"
+                      step="100"
+                      required
+                      placeholder="0"
+                      value={costPrice}
+                      onChange={(e) => setCostPrice(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-10 sm:pl-11 pr-3 py-3 sm:py-3.5 text-sm sm:text-base font-bold font-mono text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
 
-                {/* Subgrid: Harga Modal & Harga Jual */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 truncate">
-                      Harga Modal <span className="text-rose-500">*</span>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 truncate">
+                      Harga Jual <span className="text-rose-500">*</span>
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">Rp</span>
-                      <input
-                        type="number"
-                        step="100"
-                        required
-                        placeholder="0"
-                        value={costPrice}
-                        onChange={(e) => setCostPrice(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-8 pr-2 py-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
-                      />
-                    </div>
+                    {calculatedProfit > 0 && (
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 shrink-0">
+                        +{formatRupiah(calculatedProfit)}
+                      </span>
+                    )}
                   </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
-                        Harga Jual <span className="text-rose-500">*</span>
-                      </label>
-                      {calculatedProfit > 0 && (
-                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 shrink-0">
-                          +{formatRupiah(calculatedProfit)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="relative">
-                      <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">Rp</span>
-                      <input
-                        type="number"
-                        step="100"
-                        required
-                        placeholder="0"
-                        value={sellingPrice}
-                        onChange={(e) => handleSellingPriceChange(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-8 pr-2 py-1.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
-                      />
-                    </div>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-3 sm:top-3.5 text-xs sm:text-sm font-bold text-slate-400">Rp</span>
+                    <input
+                      type="number"
+                      step="100"
+                      required
+                      placeholder="0"
+                      value={sellingPrice}
+                      onChange={(e) => handleSellingPriceChange(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-10 sm:pl-11 pr-3 py-3 sm:py-3.5 text-sm sm:text-base font-bold font-mono text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Row 3: Jenis Pembayaran (Tunai / QRIS / Transfer) */}
+              {/* Row 4: Jenis Pembayaran (Tunai / QRIS / Transfer) */}
               <PaymentDestinationSelect
                 paymentMethod={paymentMethod}
                 onChangePaymentMethod={setPaymentMethod}

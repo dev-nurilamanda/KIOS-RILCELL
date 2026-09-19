@@ -93,7 +93,7 @@ export function CustomSelect<T extends string = string>({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       {label && (
-        <label className="block text-xs font-bold text-slate-700 mb-1">
+        <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">
           {label}
         </label>
       )}
@@ -104,7 +104,7 @@ export function CustomSelect<T extends string = string>({
         id={id}
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-left text-xs sm:text-sm font-semibold transition-all duration-150 ${
+        className={`w-full flex items-center justify-between gap-2 px-4 py-3 sm:py-3.5 rounded-xl text-left text-sm sm:text-base font-semibold transition-all duration-150 ${
           disabled ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'cursor-pointer'
         } ${
           error
@@ -335,11 +335,11 @@ export const AccountSelect: React.FC<AccountSelectProps> = ({
   return (
     <div className="relative" ref={dropdownRef}>
       {label && (
-        <div className="flex items-center justify-between mb-1">
-          <label className="text-xs font-bold text-slate-700">{label}</label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-xs sm:text-sm font-bold text-slate-700">{label}</label>
           {!hideBalance && (
             <span
-              className={`text-[11px] font-mono font-bold ${
+              className={`text-xs font-mono font-bold ${
                 isSupplierSelected || isPhysicalStockSelected
                   ? 'text-amber-700 font-bold'
                   : isInsufficient
@@ -365,7 +365,7 @@ export const AccountSelect: React.FC<AccountSelectProps> = ({
         id={id}
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-left transition-all duration-150 ${
+        className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 sm:py-3.5 rounded-xl text-left transition-all duration-150 ${
           disabled ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'cursor-pointer'
         } ${
           isInsufficient || error
@@ -379,7 +379,7 @@ export const AccountSelect: React.FC<AccountSelectProps> = ({
           {getAccountIcon(value, currentAccount?.category || '')}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-xs sm:text-sm text-slate-900 truncate">
+              <span className="font-bold text-sm sm:text-base text-slate-900 truncate">
                 {isSupplierSelected 
                   ? '--- Pemasok / Agen / Modal Luar ---' 
                   : isPhysicalStockSelected
@@ -405,7 +405,7 @@ export const AccountSelect: React.FC<AccountSelectProps> = ({
                 </span>
               )}
             </div>
-            <span className="text-[11px] text-slate-500 block truncate font-mono">
+            <span className="text-xs sm:text-sm text-slate-500 block truncate font-mono mt-0.5">
               {isSupplierSelected 
                 ? 'Pemasok / Distributor Luar (Tanpa potong saldo)' 
                 : isPhysicalStockSelected

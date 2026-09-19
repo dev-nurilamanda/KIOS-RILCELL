@@ -128,20 +128,20 @@ export const PaymentDestinationSelect: React.FC<PaymentDestinationSelectProps> =
   return (
     <div className="space-y-2" id="payment-destination-section">
       {/* Label and Selected Info */}
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+      <div className="flex items-center justify-between mb-1">
+        <label className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
           <span>Jenis Pembayaran</span>
           <span className="text-rose-500">*</span>
         </label>
         {sellingPrice > 0 && (
-          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
             +{formatRupiah(sellingPrice)} Masuk
           </span>
         )}
       </div>
 
-      {/* 3 Payment Method Buttons - Compact Single Row */}
-      <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
+      {/* 3 Payment Method Buttons */}
+      <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
         {/* Tunai */}
         <button
           type="button"
@@ -149,13 +149,13 @@ export const PaymentDestinationSelect: React.FC<PaymentDestinationSelectProps> =
             onChangePaymentMethod('tunai');
             setIsOpen(false);
           }}
-          className={`py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`py-2.5 sm:py-3 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
             paymentMethod === 'tunai'
               ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700'
           }`}
         >
-          <Banknote className="w-3.5 h-3.5" />
+          <Banknote className="w-4 h-4 shrink-0" />
           <span>Tunai (Laci)</span>
         </button>
 
@@ -166,13 +166,13 @@ export const PaymentDestinationSelect: React.FC<PaymentDestinationSelectProps> =
             onChangePaymentMethod('qris');
             setIsOpen(false);
           }}
-          className={`py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`py-2.5 sm:py-3 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
             paymentMethod === 'qris'
               ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700'
           }`}
         >
-          <QrCode className="w-3.5 h-3.5" />
+          <QrCode className="w-4 h-4 shrink-0" />
           <span>QRIS</span>
         </button>
 
@@ -183,27 +183,27 @@ export const PaymentDestinationSelect: React.FC<PaymentDestinationSelectProps> =
             onChangePaymentMethod('transfer');
             setIsOpen(false);
           }}
-          className={`py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`py-2.5 sm:py-3 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
             paymentMethod === 'transfer'
               ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700'
           }`}
         >
-          <CreditCard className="w-3.5 h-3.5" />
+          <CreditCard className="w-4 h-4 shrink-0" />
           <span>Transfer</span>
         </button>
       </div>
 
       {/* Destination Selector / Info Based on Selected Method */}
       {paymentMethod === 'tunai' ? (
-        /* TUNAI: Compact one-line indicator */
-        <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-1.5 text-emerald-900 font-bold min-w-0">
-            <Coins className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+        /* TUNAI: Spacious one-line indicator */
+        <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs sm:text-sm">
+          <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300 font-bold min-w-0">
+            <Coins className="w-4 h-4 text-emerald-600 shrink-0" />
             <span className="truncate">Masuk Kas Laci Tunai</span>
           </div>
           {sellingPrice > 0 && (
-            <span className="text-[11px] font-mono text-emerald-700 font-semibold shrink-0">
+            <span className="text-xs font-mono text-emerald-700 dark:text-emerald-400 font-bold shrink-0">
               Est. Laci: {formatRupiah(cashOnHand + sellingPrice)}
             </span>
           )}
@@ -215,10 +215,10 @@ export const PaymentDestinationSelect: React.FC<PaymentDestinationSelectProps> =
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer text-xs ${
+            className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 sm:py-3 rounded-xl text-left transition-all duration-150 cursor-pointer text-xs sm:text-sm ${
               isOpen
                 ? 'bg-white border border-emerald-500 shadow-sm ring-2 ring-emerald-500/20'
-                : 'bg-white hover:bg-slate-50 border border-slate-300'
+                : 'bg-slate-50 hover:bg-white border border-slate-300'
             }`}
           >
             <div className="flex items-center gap-2 min-w-0 flex-1">

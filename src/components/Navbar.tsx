@@ -250,11 +250,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* Mobile Floating Capsule Bottom Navigation Bar */}
-      <div className="md:hidden fixed bottom-3.5 inset-x-3.5 max-w-sm sm:max-w-md mx-auto z-40 pointer-events-none">
+      {/* Mobile Full-Width Bottom Navigation Bar */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 w-full z-40 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/90 shadow-[0_-4px_25px_rgba(0,0,0,0.3)]">
         <nav 
           aria-label="Navigasi Utama Bawah"
-          className="pointer-events-auto bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-xl border border-white/15 dark:border-white/10 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.4),0_4px_16px_rgba(0,0,0,0.2)] rounded-full p-1.5 flex items-center justify-between ring-1 ring-black/10"
+          className="w-full px-2 pt-1.5 pb-2 sm:pb-3 flex items-center justify-around"
         >
           {mobileBottomNavItems.map((item) => {
             const Icon = item.icon;
@@ -265,32 +265,33 @@ export const Navbar: React.FC<NavbarProps> = ({
                 id={`mobile-bottom-nav-${item.id}`}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                whileTap={{ scale: 0.88 }}
-                whileHover={{ scale: 1.04 }}
-                className={`relative flex-1 flex flex-col items-center justify-center py-2 px-2 rounded-full transition-colors cursor-pointer select-none min-h-[50px] ${
+                whileTap={{ scale: 0.9 }}
+                className={`relative flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-colors cursor-pointer select-none min-h-[52px] ${
                   isActive ? 'text-white' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {/* Smooth Sliding Pill Indicator */}
+                {/* Active Highlight Indicator */}
                 {isActive && (
                   <motion.div
-                    layoutId="floatingCapsuleActiveBg"
-                    className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full shadow-md shadow-emerald-900/50 border border-emerald-400/30"
+                    layoutId="fullWidthBottomActiveBg"
+                    className="absolute inset-x-1.5 inset-y-1 bg-emerald-600/25 border border-emerald-500/40 rounded-xl"
                     transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                   />
                 )}
 
                 {/* Animated Icon & Label */}
                 <motion.div 
-                  className="relative z-10 flex flex-col items-center gap-0.5"
-                  animate={isActive ? { scale: [1, 1.12, 1] } : { scale: 1 }}
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className="relative z-10 flex flex-col items-center gap-1"
+                  animate={isActive ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
                 >
-                  <Icon className={`w-5 h-5 transition-transform duration-150 ${
-                    isActive ? 'text-amber-300 stroke-[2.4] drop-shadow-xs' : 'text-slate-400 stroke-[1.8]'
-                  }`} />
+                  <div className={`p-1 rounded-lg transition-colors ${
+                    isActive ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-900/40' : 'text-slate-400'
+                  }`}>
+                    <Icon className="w-5 h-5 stroke-[2.2]" />
+                  </div>
                   <span className={`text-[11px] tracking-tight leading-none ${
-                    isActive ? 'font-black text-white' : 'font-medium text-slate-400'
+                    isActive ? 'font-black text-emerald-400' : 'font-medium text-slate-400'
                   }`}>
                     {item.shortLabel}
                   </span>
